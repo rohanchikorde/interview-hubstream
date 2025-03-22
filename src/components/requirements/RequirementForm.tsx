@@ -52,7 +52,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
       title: '',
       description: '',
       number_of_positions: 1,
-      skills: '', // This is correct as a string since it will be transformed by Zod
+      skills: '', // This is still a string for user input, but will be transformed by Zod
       years_of_experience: 0,
       price_per_interview: 0,
     },
