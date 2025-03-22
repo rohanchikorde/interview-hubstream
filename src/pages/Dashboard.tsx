@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -14,7 +15,8 @@ import {
   CheckCircle2,
   AlertCircle,
   BarChart3,
-  FileText
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 

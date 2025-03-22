@@ -72,7 +72,12 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
       const companyId = user.company || '';
 
       const request: CreateRequirementRequest = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        number_of_positions: data.number_of_positions,
+        skills: data.skills,
+        years_of_experience: data.years_of_experience,
+        price_per_interview: data.price_per_interview,
         company_id: companyId,
       };
 
