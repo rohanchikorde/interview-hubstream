@@ -240,7 +240,7 @@ const Dashboard = () => {
               
               <div className="space-y-4">
                 {[
-                  { message: 'Maria Garcia's interview feedback submitted', time: '2 hours ago', icon: CheckCircle2, iconClass: 'text-green-500' },
+                  { message: "Maria Garcia's interview feedback submitted", time: '2 hours ago', icon: CheckCircle2, iconClass: 'text-green-500' },
                   { message: 'New interview request for Senior Developer role', time: '4 hours ago', icon: Bell, iconClass: 'text-blue-500' },
                   { message: 'Robert Smith was moved to shortlisted', time: 'Yesterday', icon: Users, iconClass: 'text-purple-500' },
                   { message: 'System update scheduled for May 3rd', time: 'Yesterday', icon: Settings, iconClass: 'text-orange-500' }
