@@ -77,7 +77,7 @@ export const interviewService = {
         `);
 
       if (filters?.status) {
-        query = query.eq('status', filters.status as string);
+        query = query.eq('status', filters.status);
       }
 
       if (filters?.interviewer_id) {
@@ -164,7 +164,7 @@ export const interviewService = {
       const { data, error } = await supabase
         .from('interviews_schedule')
         .update({
-          status: request.status as string
+          status: request.status
         })
         .eq('id', interviewId)
         .select()

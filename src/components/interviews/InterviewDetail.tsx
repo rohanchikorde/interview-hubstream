@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { InterviewWithDetails, InterviewStatus, AddInterviewFeedbackRequest, InterviewFeedback } from '@/types/interview';
@@ -78,8 +77,8 @@ const isValidFeedback = (feedback: any): feedback is InterviewFeedback => {
   return (
     feedback !== null &&
     typeof feedback === 'object' &&
-    'rating' in feedback &&
-    'comments' in feedback
+    typeof feedback.rating === 'number' &&
+    typeof feedback.comments === 'string'
   );
 };
 
@@ -275,7 +274,7 @@ const InterviewDetail: React.FC = () => {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`h-4 w-4 ${i < (validFeedback.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
+                        className={`h-4 w-4 ${i < validFeedback.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
                       />
                     ))}
                   </div>
