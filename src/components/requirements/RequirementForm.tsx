@@ -27,6 +27,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+// Define form schema with Zod
 const formSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters' }),
@@ -36,7 +37,10 @@ const formSchema = z.object({
   price_per_interview: z.coerce.number().positive({ message: 'Price per interview must be positive' }),
 });
 
-type FormData = z.infer<typeof formSchema>;
+// Define the form data type based on the Zod schema
+type FormData = z.input<typeof formSchema>;
+// This defines the type after Zod transformations
+type ProcessedFormData = z.output<typeof formSchema>;
 
 interface RequirementFormProps {
   onSuccess?: (requirementId: string) => void;
@@ -52,7 +56,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
       title: '',
       description: '',
       number_of_positions: 1,
-      skills: '', // This is still a string for user input, but will be transformed by Zod
+      skills: '', // String for user input, transformed to string[] by Zod during submission
       years_of_experience: 0,
       price_per_interview: 0,
     },
@@ -70,14 +74,17 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
       // For demo purposes, use the first organization
       // In a real app, we would let the user select their organization
       const companyId = user.company || '';
+      
+      // Transform the data with Zod to ensure skills is a string[]
+      const processedData = formSchema.parse(data) as ProcessedFormData;
 
       const request: CreateRequirementRequest = {
-        title: data.title,
-        description: data.description,
-        number_of_positions: data.number_of_positions,
-        skills: data.skills, // This will now be a string[] after Zod transformation
-        years_of_experience: data.years_of_experience,
-        price_per_interview: data.price_per_interview,
+        title: processedData.title,
+        description: processedData.description,
+        number_of_positions: processedData.number_of_positions,
+        skills: processedData.skills, // Now this is correctly a string[]
+        years_of_experience: processedData.years_of_experience,
+        price_per_interview: processedData.price_per_interview,
         company_id: companyId,
       };
 
