@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -14,10 +13,22 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  BarChart3 
+  BarChart3,
+  FileText
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
+  const { user, logout } = useAuth();
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       {/* Sidebar */}
@@ -37,6 +48,12 @@ const Dashboard = () => {
               <Link to="/dashboard" className="nav-link-active flex items-center space-x-3 px-4 py-2.5">
                 <LayoutDashboard className="w-5 h-5" />
                 <span>Dashboard</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/dashboard/requirements" className="nav-link flex items-center space-x-3 px-4 py-2.5">
+                <FileText className="w-5 h-5" />
+                <span>Requirements</span>
               </Link>
             </li>
             <li>
@@ -68,7 +85,10 @@ const Dashboard = () => {
                 </Link>
               </li>
               <li>
-                <button className="w-full nav-link flex items-center space-x-3 px-4 py-2.5 text-left">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full nav-link flex items-center space-x-3 px-4 py-2.5 text-left"
+                >
                   <LogOut className="w-5 h-5" />
                   <span>Sign out</span>
                 </button>
@@ -111,9 +131,9 @@ const Dashboard = () => {
               <div className="relative">
                 <button className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-full bg-intervue-200 flex items-center justify-center text-intervue-700">
-                    <span className="text-sm font-medium">JD</span>
+                    <span className="text-sm font-medium">{user?.name?.substring(0, 2) || 'U'}</span>
                   </div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">John Doe</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">{user?.name || 'User'}</span>
                   <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 </button>
               </div>
@@ -125,7 +145,7 @@ const Dashboard = () => {
         <main className="pt-16 p-6">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Dashboard</h1>
-            <p className="text-slate-600 dark:text-slate-400">Welcome back, John Doe</p>
+            <p className="text-slate-600 dark:text-slate-400">Welcome back, {user?.name || 'User'}</p>
           </div>
           
           {/* Stats Cards */}
@@ -148,6 +168,32 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+          
+          {/* Requirements Quick Link */}
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-soft p-6 mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Interview Requirements</h2>
+              <Link 
+                to="/dashboard/requirements/new" 
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-intervue-100 text-intervue-700 hover:bg-intervue-200"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Requirement</span>
+              </Link>
+            </div>
+            
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              Raise and manage interview requirements for your organization.
+            </p>
+            
+            <Link
+              to="/dashboard/requirements"
+              className="inline-flex items-center text-intervue-600 font-medium hover:underline"
+            >
+              View all requirements
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
           </div>
           
           {/* Recent Interviews */}
@@ -201,7 +247,7 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {/* Upcoming Interviews */}
+          {/* Upcoming Interviews and Recent Activities */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-soft p-6 animate-fade-in" style={{ animationDelay: '0.5s' }}>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Upcoming Interviews</h2>

@@ -12,6 +12,9 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+import RequirementsPage from "./pages/requirements/RequirementsPage";
+import NewRequirementPage from "./pages/requirements/NewRequirementPage";
+import RequirementDetailPage from "./pages/requirements/RequirementDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/requirements" 
+              element={
+                <ProtectedRoute>
+                  <RequirementsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/requirements/new" 
+              element={
+                <ProtectedRoute>
+                  <NewRequirementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/requirements/:id" 
+              element={
+                <ProtectedRoute>
+                  <RequirementDetailPage />
                 </ProtectedRoute>
               } 
             />

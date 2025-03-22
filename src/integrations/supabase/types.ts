@@ -15,23 +15,40 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          requirement_id: string | null
+          resume_url: string | null
           status: string
+          updated_at: string
         }
         Insert: {
           created_at?: string | null
           email: string
           full_name: string
           id?: string
+          requirement_id?: string | null
+          resume_url?: string | null
           status: string
+          updated_at?: string
         }
         Update: {
           created_at?: string | null
           email?: string
           full_name?: string
           id?: string
+          requirement_id?: string | null
+          resume_url?: string | null
           status?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "candidates_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "requirements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       interviewees: {
         Row: {
@@ -247,6 +264,66 @@ export type Database = {
         }
         Relationships: []
       }
+      requirements: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          number_of_positions: number
+          price_per_interview: number
+          raised_by: string
+          skills: string[]
+          status: Database["public"]["Enums"]["requirement_status"]
+          title: string
+          updated_at: string
+          years_of_experience: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description: string
+          id?: string
+          number_of_positions: number
+          price_per_interview: number
+          raised_by: string
+          skills: string[]
+          status?: Database["public"]["Enums"]["requirement_status"]
+          title: string
+          updated_at?: string
+          years_of_experience: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          number_of_positions?: number
+          price_per_interview?: number
+          raised_by?: string
+          skills?: string[]
+          status?: Database["public"]["Enums"]["requirement_status"]
+          title?: string
+          updated_at?: string
+          years_of_experience?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirements_raised_by_fkey"
+            columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
@@ -285,7 +362,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      requirement_status:
+        | "Pending"
+        | "Hold"
+        | "Approved"
+        | "Rejected"
+        | "Fulfilled"
+        | "Canceled"
     }
     CompositeTypes: {
       [_ in never]: never
