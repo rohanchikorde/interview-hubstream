@@ -1,12 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Ticket, TicketWithDetails, CreateTicketRequest, UpdateTicketRequest } from "@/types/ticket";
+import { Ticket, TicketWithDetails, CreateTicketRequest, UpdateTicketRequest, TicketStatus } from "@/types/ticket";
 
 export const ticketService = {
   /**
    * Get tickets with optional filters
    */
-  async getTickets(filters?: { status?: string; company_id?: string }): Promise<TicketWithDetails[]> {
+  async getTickets(filters?: { status?: TicketStatus; company_id?: string }): Promise<TicketWithDetails[]> {
     try {
       let query = supabase
         .from('tickets')

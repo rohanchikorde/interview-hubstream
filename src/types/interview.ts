@@ -1,4 +1,6 @@
 
+import { Json } from "@/integrations/supabase/types";
+
 export type InterviewStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Canceled';
 
 export interface InterviewFeedback {
@@ -16,7 +18,7 @@ export interface Interview {
   requirement_id: string;
   scheduled_at: string;
   status: InterviewStatus;
-  feedback?: InterviewFeedback;
+  feedback?: InterviewFeedback | Json;
   created_at: string;
   updated_at: string;
 }

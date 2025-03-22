@@ -5,8 +5,23 @@ import {
   InterviewWithDetails, 
   ScheduleInterviewRequest, 
   UpdateInterviewStatusRequest, 
-  AddInterviewFeedbackRequest 
+  AddInterviewFeedbackRequest,
+  InterviewStatus,
+  InterviewFeedback
 } from "@/types/interview";
+import { Json } from "@/integrations/supabase/types";
+
+// Helper function to convert Json to InterviewFeedback if needed
+const convertFeedback = (feedback: Json | null): InterviewFeedback | undefined => {
+  if (!feedback) return undefined;
+  
+  // If it's already the right shape, return it
+  if (typeof feedback === 'object' && feedback !== null && 'rating' in feedback) {
+    return feedback as unknown as InterviewFeedback;
+  }
+  
+  return undefined;
+};
 
 export const interviewService = {
   /**
@@ -21,7 +36,7 @@ export const interviewService = {
           interviewer_id: request.interviewer_id,
           requirement_id: request.requirement_id,
           scheduled_at: request.scheduled_at,
-          status: 'Scheduled'
+          status: 'Scheduled' as InterviewStatus
         })
         .select()
         .single();
@@ -30,7 +45,10 @@ export const interviewService = {
         throw new Error(`Error scheduling interview: ${error.message}`);
       }
 
-      return data;
+      return {
+        ...data,
+        feedback: convertFeedback(data.feedback)
+      };
     } catch (error: any) {
       console.error('Error in scheduleInterview:', error);
       throw error;
@@ -40,7 +58,7 @@ export const interviewService = {
   /**
    * Get interviews with optional filters
    */
-  async getInterviews(filters?: { status?: string; interviewer_id?: string }): Promise<InterviewWithDetails[]> {
+  async getInterviews(filters?: { status?: InterviewStatus; interviewer_id?: string }): Promise<InterviewWithDetails[]> {
     try {
       let query = supabase
         .from('interviews_schedule')
@@ -73,7 +91,7 @@ export const interviewService = {
         requirement_id: item.requirement_id,
         scheduled_at: item.scheduled_at,
         status: item.status,
-        feedback: item.feedback,
+        feedback: convertFeedback(item.feedback),
         created_at: item.created_at,
         updated_at: item.updated_at,
         candidate_name: item.candidates?.full_name,
@@ -118,7 +136,7 @@ export const interviewService = {
         requirement_id: data.requirement_id,
         scheduled_at: data.scheduled_at,
         status: data.status,
-        feedback: data.feedback,
+        feedback: convertFeedback(data.feedback),
         created_at: data.created_at,
         updated_at: data.updated_at,
         candidate_name: data.candidates?.full_name,
@@ -149,7 +167,10 @@ export const interviewService = {
         throw new Error(`Error updating interview status: ${error.message}`);
       }
 
-      return data;
+      return {
+        ...data,
+        feedback: convertFeedback(data.feedback)
+      };
     } catch (error: any) {
       console.error('Error in updateInterviewStatus:', error);
       throw error;
@@ -164,8 +185,8 @@ export const interviewService = {
       const { data, error } = await supabase
         .from('interviews_schedule')
         .update({
-          feedback: request.feedback,
-          status: 'Completed' // Automatically update status to Completed when feedback is added
+          feedback: request.feedback as unknown as Json,
+          status: 'Completed' as InterviewStatus // Automatically update status to Completed when feedback is added
         })
         .eq('id', interviewId)
         .select()
@@ -175,7 +196,10 @@ export const interviewService = {
         throw new Error(`Error adding interview feedback: ${error.message}`);
       }
 
-      return data;
+      return {
+        ...data,
+        feedback: convertFeedback(data.feedback)
+      };
     } catch (error: any) {
       console.error('Error in addInterviewFeedback:', error);
       throw error;
