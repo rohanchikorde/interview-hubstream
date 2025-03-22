@@ -73,6 +73,16 @@ const statusFormSchema = z.object({
 
 type StatusFormData = z.infer<typeof statusFormSchema>;
 
+// Helper function to safely check if feedback exists and has required properties
+const isValidFeedback = (feedback: any): feedback is InterviewFeedback => {
+  return (
+    feedback !== null &&
+    typeof feedback === 'object' &&
+    'rating' in feedback &&
+    'comments' in feedback
+  );
+};
+
 const InterviewDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -110,7 +120,8 @@ const InterviewDetail: React.FC = () => {
     if (interview) {
       statusForm.setValue('status', interview.status);
       
-      if (interview.feedback) {
+      // Only set form values if the feedback is valid
+      if (interview.feedback && isValidFeedback(interview.feedback)) {
         feedbackForm.setValue('rating', interview.feedback.rating);
         feedbackForm.setValue('comments', interview.feedback.comments);
         feedbackForm.setValue('strengths', interview.feedback.strengths?.join(', ') || '');
@@ -205,6 +216,7 @@ const InterviewDetail: React.FC = () => {
 
   const interviewDate = new Date(interview.scheduled_at);
   const isPastInterview = isPast(interviewDate);
+  const validFeedback = interview.feedback && isValidFeedback(interview.feedback);
 
   return (
     <div className="space-y-6">
@@ -252,7 +264,7 @@ const InterviewDetail: React.FC = () => {
             </div>
           </div>
           
-          {interview.feedback && (
+          {validFeedback && (
             <>
               <Separator />
               <div className="space-y-2">
@@ -263,39 +275,39 @@ const InterviewDetail: React.FC = () => {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`h-4 w-4 ${i < interview.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
+                        className={`h-4 w-4 ${i < (validFeedback.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
                       />
                     ))}
                   </div>
                 </div>
                 <div>
                   <h4 className="text-sm text-gray-500">Comments:</h4>
-                  <p className="mt-1 text-sm">{interview.feedback.comments}</p>
+                  <p className="mt-1 text-sm">{validFeedback.comments}</p>
                 </div>
-                {interview.feedback.strengths && interview.feedback.strengths.length > 0 && (
+                {validFeedback.strengths && validFeedback.strengths.length > 0 && (
                   <div>
                     <h4 className="text-sm text-gray-500">Strengths:</h4>
                     <ul className="mt-1 list-disc list-inside text-sm">
-                      {interview.feedback.strengths.map((strength, index) => (
+                      {validFeedback.strengths.map((strength, index) => (
                         <li key={index}>{strength}</li>
                       ))}
                     </ul>
                   </div>
                 )}
-                {interview.feedback.weaknesses && interview.feedback.weaknesses.length > 0 && (
+                {validFeedback.weaknesses && validFeedback.weaknesses.length > 0 && (
                   <div>
                     <h4 className="text-sm text-gray-500">Areas for Improvement:</h4>
                     <ul className="mt-1 list-disc list-inside text-sm">
-                      {interview.feedback.weaknesses.map((weakness, index) => (
+                      {validFeedback.weaknesses.map((weakness, index) => (
                         <li key={index}>{weakness}</li>
                       ))}
                     </ul>
                   </div>
                 )}
-                {interview.feedback.recommendation && (
+                {validFeedback.recommendation && (
                   <div>
                     <h4 className="text-sm text-gray-500">Recommendation:</h4>
-                    <p className="mt-1 text-sm">{interview.feedback.recommendation}</p>
+                    <p className="mt-1 text-sm">{validFeedback.recommendation}</p>
                   </div>
                 )}
               </div>
@@ -354,7 +366,7 @@ const InterviewDetail: React.FC = () => {
             </DialogContent>
           </Dialog>
 
-          {!interview.feedback && isPastInterview && (
+          {!validFeedback && isPastInterview && (
             <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
               <DialogTrigger asChild>
                 <Button>

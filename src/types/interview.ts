@@ -18,7 +18,7 @@ export interface Interview {
   requirement_id: string;
   scheduled_at: string;
   status: InterviewStatus;
-  feedback?: InterviewFeedback | Json;
+  feedback?: InterviewFeedback | null;
   created_at: string;
   updated_at: string;
 }
