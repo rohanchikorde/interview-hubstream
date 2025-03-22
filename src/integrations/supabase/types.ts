@@ -178,6 +178,64 @@ export type Database = {
           },
         ]
       }
+      interviews_schedule: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          feedback: Json | null
+          id: string
+          interviewer_id: string
+          requirement_id: string
+          scheduled_at: string
+          status: Database["public"]["Enums"]["interview_status"]
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          feedback?: Json | null
+          id?: string
+          interviewer_id: string
+          requirement_id: string
+          scheduled_at: string
+          status?: Database["public"]["Enums"]["interview_status"]
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          feedback?: Json | null
+          id?: string
+          interviewer_id?: string
+          requirement_id?: string
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["interview_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_schedule_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_schedule_interviewer_id_fkey"
+            columns: ["interviewer_id"]
+            isOneToOne: false
+            referencedRelation: "interviewers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_schedule_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_admins: {
         Row: {
           created_at: string
@@ -324,6 +382,51 @@ export type Database = {
           },
         ]
       }
+      tickets: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          raised_by: string
+          requirement_id: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          raised_by: string
+          requirement_id: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          raised_by?: string
+          requirement_id?: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
@@ -362,6 +465,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      interview_status: "Scheduled" | "In Progress" | "Completed" | "Canceled"
       requirement_status:
         | "Pending"
         | "Hold"
@@ -369,6 +473,7 @@ export type Database = {
         | "Rejected"
         | "Fulfilled"
         | "Canceled"
+      ticket_status: "Pending" | "Hold" | "Approved" | "Rejected" | "Escalated"
     }
     CompositeTypes: {
       [_ in never]: never
