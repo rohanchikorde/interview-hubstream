@@ -52,7 +52,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
       title: '',
       description: '',
       number_of_positions: 1,
-      skills: '',
+      skills: '', // This is correct as a string since it will be transformed by Zod
       years_of_experience: 0,
       price_per_interview: 0,
     },
@@ -75,7 +75,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
         title: data.title,
         description: data.description,
         number_of_positions: data.number_of_positions,
-        skills: data.skills,
+        skills: data.skills, // This will now be a string[] after Zod transformation
         years_of_experience: data.years_of_experience,
         price_per_interview: data.price_per_interview,
         company_id: companyId,
