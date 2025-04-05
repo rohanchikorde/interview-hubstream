@@ -6,7 +6,7 @@ import HowItWorks from '@/components/home/HowItWorks';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, Quote, BarChart3, Clock, Award, Users, Zap, Shield, Target, BriefcaseIcon, CheckCircle } from 'lucide-react';
+import { ArrowRight, Star, Quote, BarChart3, Clock, Award, Users, Zap, Shield, Target, BriefcaseIcon, CheckCircle, CalendarIcon } from 'lucide-react';
 
 // Testimonial data
 const testimonials = [
@@ -275,7 +275,7 @@ const HowHiringWorksSection: React.FC = () => {
                 2
               </div>
               <div className="mb-6 h-16 flex items-center justify-center">
-                <Calendar className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+                <CalendarIcon className="w-12 h-12 text-blue-500 dark:text-blue-400" />
               </div>
               <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 text-center">Schedule Interviews</h3>
               <p className="text-slate-600 dark:text-slate-400 text-center">
@@ -406,3 +406,4 @@ const WhyChooseUsSection: React.FC = () => {
 };
 
 export default Index;
+
