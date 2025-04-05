@@ -1,5 +1,6 @@
 
 import { supabaseTable, castResult } from "@/utils/supabaseHelpers";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Requirement, 
   CreateRequirementRequest, 
