@@ -1,9 +1,8 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'sonner';
 
 // Define types for our context
-type Role = 'superadmin' | 'clientadmin' | 'client_coordinator' | 'super_coordinator' | 'interviewer' | 'accountant';
+type Role = 'superadmin' | 'clientadmin' | 'client_coordinator' | 'super_coordinator' | 'interviewer' | 'accountant' | 'guest';
 
 interface User {
   id: string;
@@ -68,28 +67,29 @@ const SAMPLE_USERS = [
   }
 ];
 
+// Create a guest user that will be used by default
+const GUEST_USER: User = {
+  id: 'guest',
+  email: 'guest@hirevantage.com',
+  name: 'Guest User',
+  role: 'guest' as Role
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Initialize with guest user to bypass authentication
+  const [user, setUser] = useState<User | null>(GUEST_USER);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Set to false to avoid loading screen
 
   useEffect(() => {
-    // Check for stored user data in localStorage on mount
-    const storedUser = localStorage.getItem('intervue_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error('Failed to parse stored user data');
-        localStorage.removeItem('intervue_user');
-      }
-    }
+    // No need to check localStorage as we're providing guest access by default
+    // The existing authentication code is kept for future reimplementation
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      // Keep the existing login logic for future use
       // Here we would normally make a request to an API to authenticate
       // For now, we're using sample data for demonstration
       
@@ -114,6 +114,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('intervue_user', JSON.stringify(userWithoutPassword));
       
       toast.success(`Welcome back, ${userWithoutPassword.name}!`);
+      
+      // For now, just simulate success
+      toast.success(`Login functionality is currently disabled. Using guest access.`);
+      setUser(GUEST_USER);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -125,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
+      // Keep the existing register logic for future use
       // Here we would normally make a request to an API to register
       // For now, we'll just simulate it
       
@@ -141,6 +146,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Registered new user:', userData);
       
       toast.success('Account created successfully! Please log in.');
+      
+      // For now, just simulate success
+      toast.success('Registration functionality is currently disabled. Using guest access.');
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -152,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true);
     try {
+      // Keep the existing logout logic for future use
       // Here we would normally make a request to an API to logout
       // For now, we'll just remove the user from state and localStorage
       
@@ -162,6 +171,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('intervue_user');
       
       toast.success('You have been logged out');
+      
+      // Reset to guest user instead of null
+      setUser(GUEST_USER);
+      localStorage.removeItem('intervue_user');
+      
+      toast.success('Logged out to guest access');
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
@@ -178,7 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        isAuthenticated: !!user
+        isAuthenticated: true // Always return true to bypass authentication checks
       }}
     >
       {children}

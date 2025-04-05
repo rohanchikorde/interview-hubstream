@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster.tsx'; 
@@ -72,17 +71,17 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             
+            {/* Modified to keep routes inside ProtectedRoute wrapper for future use,
+                but the ProtectedRoute component now bypasses auth checks */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
               <Route index element={<RequirementsPage />} />
               <Route path="requirements" element={<RequirementsPage />} />
               <Route path="requirements/new" element={<NewRequirementPage />} />
               <Route path="requirements/:id" element={<RequirementDetailPage />} />
               
-              {/* New routes for tickets */}
               <Route path="tickets" element={<TicketsPage />} />
               <Route path="tickets/:id" element={<TicketDetailPage />} />
               
-              {/* New routes for interviews */}
               <Route path="interviews" element={<InterviewsPage />} />
               <Route path="interviews/schedule" element={<ScheduleInterviewPage />} />
               <Route path="interviews/:id" element={<InterviewDetailPage />} />
