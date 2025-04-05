@@ -5,6 +5,48 @@
 
 @layer base {
   :root {
+    --background: 260 25% 11%;
+    --foreground: 210 40% 98%;
+
+    --muted: 260 25% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    --popover: 260 25% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --card: 260 25% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --border: 260 25% 20%;
+    --input: 260 25% 20%;
+
+    --primary: 270 95% 75%;
+    --primary-foreground: 260 25% 11%;
+
+    --secondary: 260 25% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 270 95% 75%;
+    --accent-foreground: 260 25% 11%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 270 95% 75%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 260 25% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 270 95% 75%;
+    --sidebar-primary-foreground: 260 25% 11%;
+    --sidebar-accent: 260 25% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 260 25% 20%;
+    --sidebar-ring: 270 95% 75%;
+  }
+
+  .light {
     --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;
 
@@ -20,54 +62,30 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 270 95% 65%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 270 95% 65%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --ring: 215 20.2% 65.1%;
+    --ring: 270 95% 65%;
 
     --radius: 0.5rem;
-  }
 
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
-
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
-
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --ring: 216 34% 17%;
-
-    --radius: 0.5rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-primary: 270 95% 65%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 270 95% 65%;
   }
 }
 
@@ -83,15 +101,15 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 shadow-lg rounded-lg;
+    @apply bg-card/80 backdrop-blur-sm border border-border shadow-lg rounded-lg;
   }
 
   .nav-link {
-    @apply px-4 py-2 font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300;
+    @apply px-4 py-2 font-medium text-foreground/80 hover:text-primary transition-colors duration-300;
   }
 
   .nav-link-active {
-    @apply text-blue-600 dark:text-blue-400;
+    @apply text-primary;
   }
 
   /* Animation utility classes */
