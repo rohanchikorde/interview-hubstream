@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { interviewService } from '@/services/interviewService';
@@ -37,6 +36,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseTable, castResult } from '@/utils/supabaseHelpers';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -101,8 +101,7 @@ const ScheduleInterview: React.FC = () => {
 
   const fetchCandidates = async () => {
     try {
-      const { data, error } = await supabase
-        .from('candidates')
+      const { data, error } = await supabaseTable('candidates')
         .select('*')
         .order('full_name');
       
@@ -116,8 +115,7 @@ const ScheduleInterview: React.FC = () => {
 
   const fetchInterviewers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('interviewers')
+      const { data, error } = await supabaseTable('interviewers')
         .select('*')
         .order('name');
       

@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseTable, castResult } from "@/utils/supabaseHelpers";
 import { 
   Interview, 
   InterviewWithDetails, 
@@ -36,8 +36,7 @@ export const interviewService = {
    */
   async scheduleInterview(request: ScheduleInterviewRequest): Promise<Interview | null> {
     try {
-      const { data, error } = await supabase
-        .from('interviews_schedule')
+      const { data, error } = await supabaseTable('interviews_schedule')
         .insert({
           candidate_id: request.candidate_id,
           interviewer_id: request.interviewer_id,
@@ -52,10 +51,7 @@ export const interviewService = {
         throw new Error(`Error scheduling interview: ${error.message}`);
       }
 
-      return {
-        ...data,
-        feedback: convertFeedback(data.feedback)
-      } as Interview;
+      return castResult<Interview>(data);
     } catch (error: any) {
       console.error('Error in scheduleInterview:', error);
       throw error;
@@ -67,13 +63,12 @@ export const interviewService = {
    */
   async getInterviews(filters?: { status?: InterviewStatus; interviewer_id?: string }): Promise<InterviewWithDetails[]> {
     try {
-      let query = supabase
-        .from('interviews_schedule')
+      let query = supabaseTable('interviews_schedule')
         .select(`
           *,
-          candidates!inner(full_name),
-          interviewers!inner(name),
-          requirements!inner(title)
+          candidates:candidate_id(*),
+          interviewers:interviewer_id(*),
+          requirements:requirement_id(*)
         `);
 
       if (filters?.status) {
@@ -90,21 +85,25 @@ export const interviewService = {
         throw new Error(`Error fetching interviews: ${error.message}`);
       }
 
-      // Transform data to match InterviewWithDetails interface
-      return data.map(item => ({
-        id: item.id,
-        candidate_id: item.candidate_id,
-        interviewer_id: item.interviewer_id,
-        requirement_id: item.requirement_id,
-        scheduled_at: item.scheduled_at,
-        status: item.status as InterviewStatus,
-        feedback: convertFeedback(item.feedback),
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        candidate_name: item.candidates?.full_name,
-        interviewer_name: item.interviewers?.name,
-        requirement_title: item.requirements?.title
-      }));
+      // Transform data to match InterviewWithDetails interface using type assertion
+      const interviews = castResult<any[]>(data).map(item => {
+        return {
+          id: item.id,
+          candidate_id: item.candidate_id,
+          interviewer_id: item.interviewer_id,
+          requirement_id: item.requirement_id,
+          scheduled_at: item.scheduled_at,
+          status: item.status,
+          feedback: convertFeedback(item.feedback),
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          candidate_name: item.candidates?.full_name,
+          interviewer_name: item.interviewers?.name,
+          requirement_title: item.requirements?.title
+        } as InterviewWithDetails;
+      });
+
+      return interviews;
     } catch (error: any) {
       console.error('Error in getInterviews:', error);
       throw error;
@@ -116,13 +115,12 @@ export const interviewService = {
    */
   async getInterviewById(interviewId: string): Promise<InterviewWithDetails | null> {
     try {
-      const { data, error } = await supabase
-        .from('interviews_schedule')
+      const { data, error } = await supabaseTable('interviews_schedule')
         .select(`
           *,
-          candidates!inner(full_name),
-          interviewers!inner(name),
-          requirements!inner(title)
+          candidates:candidate_id(*),
+          interviewers:interviewer_id(*),
+          requirements:requirement_id(*)
         `)
         .eq('id', interviewId)
         .single();
@@ -135,21 +133,22 @@ export const interviewService = {
         return null;
       }
 
-      // Transform data to match InterviewWithDetails interface
+      // Transform data to match InterviewWithDetails interface using type assertion
+      const item = castResult<any>(data);
       return {
-        id: data.id,
-        candidate_id: data.candidate_id,
-        interviewer_id: data.interviewer_id,
-        requirement_id: data.requirement_id,
-        scheduled_at: data.scheduled_at,
-        status: data.status as InterviewStatus,
-        feedback: convertFeedback(data.feedback),
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        candidate_name: data.candidates?.full_name,
-        interviewer_name: data.interviewers?.name,
-        requirement_title: data.requirements?.title
-      };
+        id: item.id,
+        candidate_id: item.candidate_id,
+        interviewer_id: item.interviewer_id,
+        requirement_id: item.requirement_id,
+        scheduled_at: item.scheduled_at,
+        status: item.status,
+        feedback: convertFeedback(item.feedback),
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        candidate_name: item.candidates?.full_name,
+        interviewer_name: item.interviewers?.name,
+        requirement_title: item.requirements?.title
+      } as InterviewWithDetails;
     } catch (error: any) {
       console.error('Error in getInterviewById:', error);
       throw error;
@@ -161,8 +160,7 @@ export const interviewService = {
    */
   async updateInterviewStatus(interviewId: string, request: UpdateInterviewStatusRequest): Promise<Interview | null> {
     try {
-      const { data, error } = await supabase
-        .from('interviews_schedule')
+      const { data, error } = await supabaseTable('interviews_schedule')
         .update({
           status: request.status
         })
@@ -174,10 +172,7 @@ export const interviewService = {
         throw new Error(`Error updating interview status: ${error.message}`);
       }
 
-      return {
-        ...data,
-        feedback: convertFeedback(data.feedback)
-      } as Interview;
+      return castResult<Interview>(data);
     } catch (error: any) {
       console.error('Error in updateInterviewStatus:', error);
       throw error;
@@ -189,8 +184,7 @@ export const interviewService = {
    */
   async addInterviewFeedback(interviewId: string, request: AddInterviewFeedbackRequest): Promise<Interview | null> {
     try {
-      const { data, error } = await supabase
-        .from('interviews_schedule')
+      const { data, error } = await supabaseTable('interviews_schedule')
         .update({
           feedback: request.feedback as unknown as Json,
           status: 'Completed' as InterviewStatus // Automatically update status to Completed when feedback is added
@@ -203,10 +197,7 @@ export const interviewService = {
         throw new Error(`Error adding interview feedback: ${error.message}`);
       }
 
-      return {
-        ...data,
-        feedback: convertFeedback(data.feedback)
-      } as Interview;
+      return castResult<Interview>(data);
     } catch (error: any) {
       console.error('Error in addInterviewFeedback:', error);
       throw error;

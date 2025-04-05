@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseTable, castResult } from "@/utils/supabaseHelpers";
 import { 
   Candidate, 
   CreateCandidateRequest, 
@@ -11,8 +11,7 @@ import { toast } from "sonner";
 export const candidateService = {
   async createCandidate(request: CreateCandidateRequest): Promise<Candidate | null> {
     try {
-      const { data, error } = await supabase
-        .from('candidates')
+      const { data, error } = await supabaseTable('candidates')
         .insert({
           full_name: request.full_name,
           email: request.email,
@@ -24,7 +23,7 @@ export const candidateService = {
         .single();
 
       if (error) throw error;
-      return data as Candidate;
+      return castResult<Candidate>(data);
     } catch (error: any) {
       toast.error(`Failed to create candidate: ${error.message}`);
       return null;
@@ -33,14 +32,13 @@ export const candidateService = {
 
   async getCandidatesByRequirement(requirementId: string): Promise<Candidate[]> {
     try {
-      const { data, error } = await supabase
-        .from('candidates')
+      const { data, error } = await supabaseTable('candidates')
         .select('*')
         .eq('requirement_id', requirementId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Candidate[];
+      return castResult<Candidate[]>(data);
     } catch (error: any) {
       toast.error(`Failed to fetch candidates: ${error.message}`);
       return [];
@@ -49,15 +47,14 @@ export const candidateService = {
 
   async updateCandidateStatus(id: string, status: CandidateStatus): Promise<Candidate | null> {
     try {
-      const { data, error } = await supabase
-        .from('candidates')
+      const { data, error } = await supabaseTable('candidates')
         .update({ status })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return data as Candidate;
+      return castResult<Candidate>(data);
     } catch (error: any) {
       toast.error(`Failed to update candidate status: ${error.message}`);
       return null;
@@ -88,8 +85,7 @@ export const candidateService = {
 
   async bulkCreateCandidates(candidates: CreateCandidateRequest[]): Promise<number> {
     try {
-      const { data, error } = await supabase
-        .from('candidates')
+      const { data, error } = await supabaseTable('candidates')
         .insert(candidates.map(c => ({
           full_name: c.full_name,
           email: c.email,
