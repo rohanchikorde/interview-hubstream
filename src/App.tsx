@@ -32,6 +32,13 @@ import InterviewsPage from '@/pages/interviews/InterviewsPage';
 import InterviewDetailPage from '@/pages/interviews/InterviewDetailPage';
 import ScheduleInterviewPage from '@/pages/interviews/ScheduleInterviewPage';
 
+// Admin pages
+import CompaniesPage from '@/pages/admin/CompaniesPage';
+import CompanyDetailPage from '@/pages/admin/CompanyDetailPage';
+import NewCompanyPage from '@/pages/admin/NewCompanyPage';
+import NewInterviewPage from '@/pages/admin/NewInterviewPage';
+import InterviewerDetailPage from '@/pages/admin/InterviewerDetailPage';
+
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -87,6 +94,13 @@ function App() {
               <Route path="interviews" element={<InterviewsPage />} />
               <Route path="interviews/schedule" element={<ScheduleInterviewPage />} />
               <Route path="interviews/:id" element={<InterviewDetailPage />} />
+              
+              {/* Admin Routes */}
+              <Route path="admin/companies" element={<CompaniesPage />} />
+              <Route path="admin/companies/new" element={<NewCompanyPage />} />
+              <Route path="admin/companies/:companyId" element={<CompanyDetailPage />} />
+              <Route path="admin/companies/:companyId/interviews/new" element={<NewInterviewPage />} />
+              <Route path="admin/interviewers/:interviewerId" element={<InterviewerDetailPage />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />

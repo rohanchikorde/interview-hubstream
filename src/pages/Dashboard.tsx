@@ -5,7 +5,12 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Sidebar, 
-  SidebarContent
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -19,7 +24,9 @@ import {
   List, 
   LogOut, 
   Calendar, 
-  Ticket
+  Ticket,
+  Building,
+  Users
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -74,6 +81,24 @@ const Dashboard: React.FC = () => {
                 <Calendar className="h-4 w-4" />
                 Interviews
               </Link>
+              
+              {/* Admin Section */}
+              <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Administration
+                </h3>
+                <Link
+                  to="/dashboard/admin/companies"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                    location.pathname.includes('/dashboard/admin/companies') &&
+                      "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                  )}
+                >
+                  <Building className="h-4 w-4" />
+                  Companies
+                </Link>
+              </div>
             </nav>
           </div>
           <div className="py-4 px-6">
@@ -133,6 +158,24 @@ const Dashboard: React.FC = () => {
                     <Calendar className="h-4 w-4" />
                     Interviews
                   </Link>
+                  
+                  {/* Admin Section in Mobile Menu */}
+                  <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Administration
+                    </h3>
+                    <Link
+                      to="/dashboard/admin/companies"
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                        location.pathname.includes('/dashboard/admin/companies') &&
+                          "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                      )}
+                    >
+                      <Building className="h-4 w-4" />
+                      Companies
+                    </Link>
+                  </div>
                   <Link
                     to="#"
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50"
@@ -185,6 +228,17 @@ const Dashboard: React.FC = () => {
               )}
             >
               Interviews
+            </Link>
+            <Link
+              to="/dashboard/admin/companies"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                location.pathname.includes('/dashboard/admin/companies')
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
+            >
+              Companies
             </Link>
           </nav>
           <div className="flex items-center gap-4">
