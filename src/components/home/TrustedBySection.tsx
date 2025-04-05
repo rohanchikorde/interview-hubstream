@@ -1,6 +1,5 @@
 
 import React from 'react';
-import useAnimateOnScroll from '../../hooks/useAnimateOnScroll';
 
 // Trusted by companies
 const trustedCompanies = [
@@ -9,12 +8,10 @@ const trustedCompanies = [
 ];
 
 const TrustedBySection: React.FC = () => {
-  useAnimateOnScroll();
-
   return (
-    <section className="py-12 bg-black dark:bg-black border-b border-slate-800/30">
+    <section className="py-12 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
       <div className="container mx-auto px-4">
-        <p className="text-center text-slate-400 mb-8 text-sm font-medium uppercase tracking-wide animate-on-scroll">
+        <p className="text-center text-slate-500 dark:text-slate-400 mb-8 text-sm font-medium uppercase tracking-wide">
           Trusted By Industry Leaders Worldwide
         </p>
         
@@ -22,8 +19,7 @@ const TrustedBySection: React.FC = () => {
           {trustedCompanies.map((logo, index) => (
             <div 
               key={index}
-              className="grayscale hover:grayscale-0 opacity-50 hover:opacity-90 transition-all duration-300 animate-on-scroll"
-              style={{ animationDelay: `${index * 200}ms` }}
+              className="grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300"
             >
               <img src={logo} alt="Client logo" className="h-8 md:h-10 w-auto object-contain" />
             </div>

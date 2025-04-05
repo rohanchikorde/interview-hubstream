@@ -63,33 +63,6 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// New purple theme colors
-				purple: {
-					50: '#f5f3ff',
-					100: '#ede9fe',
-					200: '#ddd6fe',
-					300: '#c4b5fd',
-					400: '#a78bfa',
-					500: '#8b5cf6',
-					600: '#7c3aed',
-					700: '#6d28d9',
-					800: '#5b21b6',
-					900: '#4c1d95',
-					950: '#2e1065',
-				},
-				hirevantage: {
-					50: '#f5f3ff',
-					100: '#ede9fe',
-					200: '#ddd6fe', 
-					300: '#c4b5fd',
-					400: '#a78bfa',
-					500: '#8b5cf6',
-					600: '#7c3aed',
-					700: '#6d28d9',
-					800: '#5b21b6',
-					900: '#4c1d95',
-					950: '#2e1065',
-				},
 				intervue: {
 					50: '#f0f9ff',
 					100: '#e0f2fe',
@@ -113,7 +86,6 @@ export default {
 					700: '#334155',
 					800: '#1e293b',
 					900: '#0f172a',
-					950: '#020617',
 				}
 			},
 			borderRadius: {
@@ -171,11 +143,6 @@ export default {
 				'blur-in': {
 					'0%': { filter: 'blur(5px)', opacity: '0' },
 					'100%': { filter: 'blur(0)', opacity: '1' }
-				},
-				'wave': {
-					'0%, 100%': { transform: 'translateY(0)' },
-					'25%': { transform: 'translateY(-5px)' },
-					'75%': { transform: 'translateY(5px)' },
 				}
 			},
 			animation: {
@@ -188,21 +155,13 @@ export default {
 				'zoom-in': 'zoom-in 0.5s cubic-bezier(0.2, 0, 0.2, 1)',
 				'pulse-slow': 'pulse-slow 3s infinite ease-in-out',
 				'float': 'float 6s infinite ease-in-out',
-				'blur-in': 'blur-in 0.6s cubic-bezier(0.2, 0, 0.2, 1)',
-				'wave': 'wave 10s infinite ease-in-out',
+				'blur-in': 'blur-in 0.6s cubic-bezier(0.2, 0, 0.2, 1)'
 			},
 			backdropFilter: {
 				'none': 'none',
 				'blur': 'blur(20px)'
-			},
-			backgroundImage: {
-				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'gradient-purple': 'linear-gradient(90deg, #6d28d9 0%, #a78bfa 100%)',
-				'gradient-purple-dark': 'linear-gradient(90deg, #4c1d95 0%, #7c3aed 100%)',
-				'gradient-wave': 'url("/public/lovable-uploads/270e37c3-6bd1-4266-905b-05745a0bb8a7.png")',
 			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
