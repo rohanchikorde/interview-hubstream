@@ -14,6 +14,8 @@ import Register from '@/pages/Register';
 import NotFound from '@/pages/NotFound';
 import Unauthorized from '@/pages/Unauthorized';
 import RequestDemo from '@/pages/RequestDemo';
+import Pricing from '@/pages/Pricing';
+import About from '@/pages/About';
 
 // Requirements pages
 import RequirementsPage from '@/pages/requirements/RequirementsPage';
@@ -67,6 +69,8 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/request-demo" element={<RequestDemo />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/about" element={<About />} />
             
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
               <Route index element={<RequirementsPage />} />
