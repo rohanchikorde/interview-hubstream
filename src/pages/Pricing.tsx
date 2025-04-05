@@ -8,7 +8,7 @@ import Footer from '@/components/layout/Footer';
 import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useAnimateOnScroll } from '@/hooks/useAnimateOnScroll';
+import useAnimateOnScroll from '@/hooks/useAnimateOnScroll';
 
 const Pricing: React.FC = () => {
   const navigate = useNavigate();

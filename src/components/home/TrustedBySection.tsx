@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAnimateOnScroll } from '../../hooks/useAnimateOnScroll';
+import useAnimateOnScroll from '../../hooks/useAnimateOnScroll';
 
 // Trusted by companies
 const trustedCompanies = [
