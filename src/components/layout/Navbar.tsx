@@ -86,8 +86,8 @@ const Navbar: React.FC = () => {
             <Link to="/login" className="text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2 rounded-lg transition-colors duration-300">
               Sign in
             </Link>
-            <Link to="/register" className="bg-gradient-to-r from-blue-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-medium px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 animate-pulse-slow">
-              Get Started
+            <Link to="/request-demo" className="bg-gradient-to-r from-blue-500 to-teal-400 hover:from-blue-600 hover:to-teal-500 text-white font-medium px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 animate-pulse-slow">
+              Request a demo
             </Link>
           </div>
 
@@ -164,11 +164,11 @@ const Navbar: React.FC = () => {
                 Sign in
               </Link>
               <Link 
-                to="/register" 
+                to="/request-demo" 
                 className="w-full text-center bg-gradient-to-r from-blue-500 to-teal-400 text-white rounded-lg py-2 font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Get Started
+                Request a demo
               </Link>
             </div>
           </div>

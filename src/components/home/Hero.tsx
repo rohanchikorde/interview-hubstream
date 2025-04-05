@@ -47,8 +47,8 @@ const Hero: React.FC = () => {
               <span>Start Hiring Better</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/demo" className="w-full sm:w-auto bg-white dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-2 px-8 py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 font-medium">
-              <span>Schedule a Demo</span>
+            <Link to="/request-demo" className="w-full sm:w-auto bg-white dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-2 px-8 py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 font-medium">
+              <span>Request a Demo</span>
             </Link>
           </div>
           
