@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster.tsx'; 
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // Import components
@@ -55,13 +57,14 @@ function App() {
       storageKey="vite-react-theme"
     >
       <AuthProvider>
-        <Toaster />
-        <SonnerToaster position="bottom-center" richColors closeButton />
-        {!isOnline && (
-          <div className="fixed bottom-0 left-0 w-full bg-red-500 text-white p-2 text-center z-50">
-            You are currently offline. Some features may not be available.
-          </div>
-        )}
+        <SidebarProvider>
+          <Toaster />
+          <SonnerToaster position="bottom-center" richColors closeButton />
+          {!isOnline && (
+            <div className="fixed bottom-0 left-0 w-full bg-red-500 text-white p-2 text-center z-50">
+              You are currently offline. Some features may not be available.
+            </div>
+          )}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -71,8 +74,7 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             
-            {/* Modified to keep routes inside ProtectedRoute wrapper for future use,
-                but the ProtectedRoute component now bypasses auth checks */}
+            {/* Protected routes all wrapped in SidebarProvider by default */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
               <Route index element={<RequirementsPage />} />
               <Route path="requirements" element={<RequirementsPage />} />
@@ -89,6 +91,7 @@ function App() {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
+        </SidebarProvider>
       </AuthProvider>
     </ThemeProvider>
   );
