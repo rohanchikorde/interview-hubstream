@@ -15,7 +15,20 @@ export interface Interviewer {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
+  companyId: string;
+  totalInterviews?: number;
+}
+
+export interface Interview {
+  id: string;
+  candidateName: string;
+  interviewerId: string;
+  interviewerName: string;
+  date: string;
+  time: string;
+  status: 'Scheduled' | 'Completed' | 'Canceled' | 'Pending';
   companyId: string;
 }
 
@@ -74,22 +87,38 @@ export const mockCompanies: Company[] = [
 
 export const mockInterviewers: Record<string, Interviewer[]> = {
   '1': [
-    { id: '101', name: 'Alice Chen', email: 'alice@acme.com', role: 'HR Manager', companyId: '1' },
-    { id: '102', name: 'Bob Wilson', email: 'bob@acme.com', role: 'Technical Lead', companyId: '1' },
-    { id: '103', name: 'Carol Davis', email: 'carol@acme.com', role: 'Senior Developer', companyId: '1' }
+    { id: '101', name: 'Alice Chen', email: 'alice@acme.com', phone: '555-1001', role: 'HR Manager', companyId: '1', totalInterviews: 8 },
+    { id: '102', name: 'Bob Wilson', email: 'bob@acme.com', phone: '555-1002', role: 'Technical Lead', companyId: '1', totalInterviews: 12 },
+    { id: '103', name: 'Carol Davis', email: 'carol@acme.com', phone: '555-1003', role: 'Senior Developer', companyId: '1', totalInterviews: 5 }
   ],
   '2': [
-    { id: '201', name: 'David Miller', email: 'david@globex.com', role: 'HR Director', companyId: '2' },
-    { id: '202', name: 'Emily White', email: 'emily@globex.com', role: 'Engineering Manager', companyId: '2' }
+    { id: '201', name: 'David Miller', email: 'david@globex.com', phone: '555-2001', role: 'HR Director', companyId: '2', totalInterviews: 15 },
+    { id: '202', name: 'Emily White', email: 'emily@globex.com', phone: '555-2002', role: 'Engineering Manager', companyId: '2', totalInterviews: 9 }
   ],
   '3': [
-    { id: '301', name: 'Frank Lopez', email: 'frank@oceanic.com', role: 'HR Specialist', companyId: '3' },
-    { id: '302', name: 'Grace Kim', email: 'grace@oceanic.com', role: 'Department Head', companyId: '3' }
+    { id: '301', name: 'Frank Lopez', email: 'frank@oceanic.com', phone: '555-3001', role: 'HR Specialist', companyId: '3', totalInterviews: 6 },
+    { id: '302', name: 'Grace Kim', email: 'grace@oceanic.com', phone: '555-3002', role: 'Department Head', companyId: '3', totalInterviews: 4 }
   ],
   '4': [
-    { id: '401', name: 'Henry Adams', email: 'henry@initech.com', role: 'HR Coordinator', companyId: '4' },
-    { id: '402', name: 'Irene Garcia', email: 'irene@initech.com', role: 'Project Manager', companyId: '4' },
-    { id: '403', name: 'Jack Thompson', email: 'jack@initech.com', role: 'Team Lead', companyId: '4' }
+    { id: '401', name: 'Henry Adams', email: 'henry@initech.com', phone: '555-4001', role: 'HR Coordinator', companyId: '4', totalInterviews: 10 },
+    { id: '402', name: 'Irene Garcia', email: 'irene@initech.com', phone: '555-4002', role: 'Project Manager', companyId: '4', totalInterviews: 8 },
+    { id: '403', name: 'Jack Thompson', email: 'jack@initech.com', phone: '555-4003', role: 'Team Lead', companyId: '4', totalInterviews: 14 }
+  ]
+};
+
+export const mockInterviews: Record<string, Interview[]> = {
+  '101': [
+    { id: 'i1001', candidateName: 'Sarah Johnson', interviewerId: '101', interviewerName: 'Alice Chen', date: '2024-04-10', time: '10:00', status: 'Scheduled', companyId: '1' },
+    { id: 'i1002', candidateName: 'Mike Peterson', interviewerId: '101', interviewerName: 'Alice Chen', date: '2024-04-08', time: '14:30', status: 'Completed', companyId: '1' },
+    { id: 'i1003', candidateName: 'Emma Wilson', interviewerId: '101', interviewerName: 'Alice Chen', date: '2024-04-15', time: '11:15', status: 'Pending', companyId: '1' }
+  ],
+  '102': [
+    { id: 'i1004', candidateName: 'James Brown', interviewerId: '102', interviewerName: 'Bob Wilson', date: '2024-04-12', time: '09:00', status: 'Scheduled', companyId: '1' },
+    { id: 'i1005', candidateName: 'Lisa Chen', interviewerId: '102', interviewerName: 'Bob Wilson', date: '2024-04-07', time: '15:45', status: 'Completed', companyId: '1' }
+  ],
+  '201': [
+    { id: 'i2001', candidateName: 'Ryan Miller', interviewerId: '201', interviewerName: 'David Miller', date: '2024-04-11', time: '13:30', status: 'Scheduled', companyId: '2' },
+    { id: 'i2002', candidateName: 'Jennifer Lopez', interviewerId: '201', interviewerName: 'David Miller', date: '2024-04-09', time: '10:15', status: 'Canceled', companyId: '2' }
   ]
 };
 
@@ -99,3 +128,9 @@ export const mockInterviewStats: Record<string, InterviewStats> = {
   '3': { total: 8, upcoming: 2, completed: 6 },
   '4': { total: 20, upcoming: 8, completed: 12 }
 };
+
+// Helper function to get all interviewers across companies
+export const getAllInterviewers = (): Interviewer[] => {
+  return Object.values(mockInterviewers).flat();
+};
+

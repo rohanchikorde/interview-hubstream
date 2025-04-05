@@ -38,6 +38,9 @@ import CompanyDetailPage from '@/pages/admin/CompanyDetailPage';
 import NewCompanyPage from '@/pages/admin/NewCompanyPage';
 import NewInterviewPage from '@/pages/admin/NewInterviewPage';
 import InterviewerDetailPage from '@/pages/admin/InterviewerDetailPage';
+import InterviewerDashboardPage from '@/pages/admin/InterviewerDashboardPage';
+import InterviewerManagementPage from '@/pages/admin/InterviewerManagementPage';
+import NewInterviewerPage from '@/pages/admin/NewInterviewerPage';
 
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
@@ -81,7 +84,7 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             
-            {/* Protected routes all wrapped in SidebarProvider by default */}
+            {/* Protected routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
               <Route index element={<RequirementsPage />} />
               <Route path="requirements" element={<RequirementsPage />} />
@@ -100,7 +103,10 @@ function App() {
               <Route path="admin/companies/new" element={<NewCompanyPage />} />
               <Route path="admin/companies/:companyId" element={<CompanyDetailPage />} />
               <Route path="admin/companies/:companyId/interviews/new" element={<NewInterviewPage />} />
+              <Route path="admin/interviewers" element={<InterviewerManagementPage />} />
+              <Route path="admin/interviewers/new" element={<NewInterviewerPage />} />
               <Route path="admin/interviewers/:interviewerId" element={<InterviewerDetailPage />} />
+              <Route path="admin/interviewers/:interviewerId/dashboard" element={<InterviewerDashboardPage />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />

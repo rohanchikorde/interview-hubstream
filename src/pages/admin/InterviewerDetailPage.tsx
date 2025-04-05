@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockInterviewers, mockCompanies } from '@/data/mockData';
-import { Mail, User, Building, ArrowLeft } from 'lucide-react';
+import { Mail, User, Building, ArrowLeft, ExternalLink } from 'lucide-react';
 
 const InterviewerDetailPage: React.FC = () => {
   const { interviewerId } = useParams<{ interviewerId: string }>();
@@ -41,10 +41,16 @@ const InterviewerDetailPage: React.FC = () => {
           <h1 className="text-3xl font-bold tracking-tight">{interviewer.name}</h1>
           <p className="text-gray-500 dark:text-gray-400">{interviewer.role} at {company.name}</p>
         </div>
-        <Button variant="outline" onClick={() => navigate(`/dashboard/admin/companies/${company.id}`)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Company
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => navigate(`/dashboard/admin/companies/${company.id}`)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Company
+          </Button>
+          <Button onClick={() => navigate(`/dashboard/admin/interviewers/${interviewerId}/dashboard`)}>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            View Dashboard
+          </Button>
+        </div>
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">

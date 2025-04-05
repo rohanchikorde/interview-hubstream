@@ -49,6 +49,8 @@ const NewInterviewPage: React.FC = () => {
     navigate(`/dashboard/admin/companies/${companyId}`);
   };
 
+  const statusOptions = ['Pending', 'Scheduled', 'In Progress', 'Completed', 'Canceled'];
+
   return (
     <div className="space-y-6">
       <div>
@@ -82,15 +84,33 @@ const NewInterviewPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (minutes)</Label>
-              <Input id="duration" type="number" min="15" step="15" defaultValue="60" required />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Input id="duration" type="number" min="15" step="15" defaultValue="60" required />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select>
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status.toLowerCase()}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="interviewer">Select Interviewer</Label>
               <Select>
-                <SelectTrigger>
+                <SelectTrigger id="interviewer">
                   <SelectValue placeholder="Select an interviewer" />
                 </SelectTrigger>
                 <SelectContent>
