@@ -38,6 +38,24 @@ export interface InterviewStats {
   completed: number;
 }
 
+export interface AdminProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  jobTitle: string;
+  profilePicture: string;
+  preferences: {
+    emailNotifications: boolean;
+    darkMode: boolean;
+    language: string;
+  };
+  platformSettings: {
+    allowPublicAccess: boolean;
+    defaultInterviewDuration: string;
+  };
+}
+
 export const mockCompanies: Company[] = [
   {
     id: '1',
@@ -129,8 +147,25 @@ export const mockInterviewStats: Record<string, InterviewStats> = {
   '4': { total: 20, upcoming: 8, completed: 12 }
 };
 
+export const mockAdminProfile: AdminProfile = {
+  id: '1',
+  fullName: 'Alex Johnson',
+  email: 'alex@hirevantage.com',
+  phone: '555-9876',
+  jobTitle: 'Admin Manager',
+  profilePicture: '/assets/profile.jpg',
+  preferences: {
+    emailNotifications: true,
+    darkMode: false,
+    language: 'English'
+  },
+  platformSettings: {
+    allowPublicAccess: false,
+    defaultInterviewDuration: '1 hour'
+  }
+};
+
 // Helper function to get all interviewers across companies
 export const getAllInterviewers = (): Interviewer[] => {
   return Object.values(mockInterviewers).flat();
 };
-
