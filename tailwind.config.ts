@@ -64,16 +64,16 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				intervue: {
-					50: '#f5f0ff',
-					100: '#ece1ff',
-					200: '#ddcaff',
-					300: '#c7a3ff',
-					400: '#b176ff',
-					500: '#9c47ff',
-					600: '#8a1dff',
-					700: '#7a0df9',
-					800: '#6a12d4',
-					900: '#4a0e8c',
+					50: '#f0f9ff',
+					100: '#e0f2fe',
+					200: '#bae6fd',
+					300: '#7dd3fc',
+					400: '#38bdf8',
+					500: '#0ea5e9',
+					600: '#0284c7',
+					700: '#0369a1',
+					800: '#075985',
+					900: '#0c4a6e',
 				},
 				slate: {
 					50: '#f8fafc',
@@ -102,7 +102,6 @@ export default {
 				'glass': '0 8px 32px rgba(0, 0, 0, 0.06)',
 				'hover': '0 10px 40px rgba(0, 0, 0, 0.1)',
 				'card': '0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
-				'purple': '0 8px 32px rgba(122, 13, 249, 0.15)',
 			},
 			keyframes: {
 				'accordion-down': {

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import useAnimateOnScroll from '../../hooks/useAnimateOnScroll';
 
 // Trusted by companies
 const trustedCompanies = [
@@ -9,12 +8,10 @@ const trustedCompanies = [
 ];
 
 const TrustedBySection: React.FC = () => {
-  useAnimateOnScroll();
-  
   return (
-    <section className="py-12 bg-background border-b border-border">
+    <section className="py-12 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
       <div className="container mx-auto px-4">
-        <p className="text-center text-foreground/60 mb-8 text-sm font-medium uppercase tracking-wide">
+        <p className="text-center text-slate-500 dark:text-slate-400 mb-8 text-sm font-medium uppercase tracking-wide">
           Trusted By Industry Leaders Worldwide
         </p>
         

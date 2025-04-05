@@ -52,7 +52,7 @@ function App() {
 
   return (
     <ThemeProvider
-      defaultTheme="dark"
+      defaultTheme="system"
       storageKey="vite-react-theme"
     >
       <AuthProvider>

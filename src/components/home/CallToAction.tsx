@@ -1,13 +1,10 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import useAnimateOnScroll from '../../hooks/useAnimateOnScroll';
 
 const CallToAction: React.FC = () => {
-  useAnimateOnScroll();
-  
   return (
-    <section className="py-20 bg-gradient-to-r from-purple-900 to-indigo-900 text-white">
+    <section className="py-20 bg-gradient-to-r from-blue-600 to-teal-500 text-white">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-3xl md:text-4xl font-bold mb-6 max-w-3xl mx-auto animate-on-scroll">
           Ready to Revolutionize Your Technical Hiring?
@@ -18,7 +15,7 @@ const CallToAction: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-center gap-4 animate-on-scroll">
           <Link 
             to="/register" 
-            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-300 font-medium rounded-lg px-8 py-3.5 shadow-purple"
+            className="bg-white text-blue-600 hover:bg-slate-100 transition-colors duration-300 font-medium rounded-lg px-8 py-3.5 shadow-lg hover:shadow-xl"
           >
             Get Started Free
           </Link>
