@@ -8,9 +8,11 @@ import Footer from '@/components/layout/Footer';
 import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useAnimateOnScroll } from '@/hooks/useAnimateOnScroll';
 
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
+  useAnimateOnScroll();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,77 +23,107 @@ const Pricing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-black text-white">
       <Navbar />
       
       <main className="flex-1 pt-28">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
-            {/* Left Column */}
-            <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-slate-800 dark:to-slate-700 p-10 rounded-2xl">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                Build a <span className="text-blue-600 dark:text-blue-400">best-in-class</span> tech team
-              </h2>
+          <div className="text-center max-w-3xl mx-auto mb-16 animate-on-scroll">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient-purple">Pricing and Features</h1>
+            <p className="text-lg text-slate-400">Find the perfect plan for your technical hiring needs</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 items-start max-w-6xl mx-auto">
+            {/* Left Column - Pricing Card */}
+            <div className="glass-card p-8 md:p-10 animate-on-scroll">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-white">
+                  Enterprise Plan
+                </h3>
+                <div className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full">
+                  Popular
+                </div>
+              </div>
               
-              <ul className="space-y-6 mt-8">
-                <li className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white">
-                    ⚡
+              <div className="mb-8">
+                <span className="text-4xl font-bold">$19</span>
+                <span className="text-slate-400 ml-2">per seat / month</span>
+              </div>
+              
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-start">
+                  <div className="bg-purple-500 rounded-full p-1 mt-1 mr-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                  <span className="text-lg text-slate-800 dark:text-slate-200">All-in-one interview platform</span>
+                  <span className="text-slate-300">Unlimited technical interviews</span>
                 </li>
-                <li className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white">
-                    ⚡
+                <li className="flex items-start">
+                  <div className="bg-purple-500 rounded-full p-1 mt-1 mr-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                  <span className="text-lg text-slate-800 dark:text-slate-200">Unlimited interview capacity</span>
+                  <span className="text-slate-300">Custom hiring workflows</span>
                 </li>
-                <li className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white">
-                    ⚡
+                <li className="flex items-start">
+                  <div className="bg-purple-500 rounded-full p-1 mt-1 mr-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                  <span className="text-lg text-slate-800 dark:text-slate-200">Industry-specific expertise</span>
+                  <span className="text-slate-300">Advanced reporting & analytics</span>
                 </li>
-                <li className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white">
-                    ⚡
+                <li className="flex items-start">
+                  <div className="bg-purple-500 rounded-full p-1 mt-1 mr-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                  <span className="text-lg text-slate-800 dark:text-slate-200">Tailored hiring solutions</span>
+                  <span className="text-slate-300">API access & integrations</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-purple-500 rounded-full p-1 mt-1 mr-3">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="text-slate-300">Dedicated account manager</span>
                 </li>
               </ul>
+              
+              <Button 
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium py-3"
+              >
+                Request Custom Quote
+              </Button>
             </div>
             
             {/* Right Column - Form */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Scale your tech team with Hirevantage
-                </h3>
-                <button className="text-slate-400 hover:text-slate-500">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                  </svg>
-                </button>
-              </div>
+            <div className="glass-card p-8 md:p-10 animate-on-scroll">
+              <h3 className="text-2xl font-bold text-white mb-6 text-left">
+                Get a personalized quote
+              </h3>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="email" className="form-label">Email <span className="text-red-500">*</span></Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="Enter your email" 
                     required 
-                    className="w-full"
+                    className="form-input bg-white/5 text-white border-slate-700"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone number <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="phone" className="form-label">Phone number <span className="text-red-500">*</span></Label>
                   <div className="flex gap-2">
                     <div className="w-24">
-                      <div className="flex items-center border border-input bg-background rounded-md px-3 h-10">
-                        <span className="text-sm text-slate-600 dark:text-slate-300">IN +91</span>
+                      <div className="flex items-center bg-white/5 border border-slate-700 rounded-md px-3 h-10">
+                        <span className="text-sm text-slate-300">IN +91</span>
                         <svg width="12" height="12" viewBox="0 0 12 12" className="ml-2" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -102,35 +134,46 @@ const Pricing: React.FC = () => {
                       type="tel" 
                       placeholder="Enter your phone number" 
                       required 
-                      className="flex-1"
+                      className="form-input flex-1 bg-white/5 text-white border-slate-700"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Your company size <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="name" className="form-label">Full Name <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="name" 
+                    type="text" 
+                    placeholder="Enter your name" 
+                    required 
+                    className="form-input bg-white/5 text-white border-slate-700"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="form-label">Your company size <span className="text-red-500">*</span></Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="flex">
                       <input type="radio" id="size-1-29" name="company-size" value="1-29" className="sr-only peer" required />
-                      <label htmlFor="size-1-29" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-200 cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700 dark:peer-checked:bg-blue-900/20">
+                      <label htmlFor="size-1-29" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-700 cursor-pointer peer-checked:bg-purple-900/50 peer-checked:border-purple-500 peer-checked:text-white hover:bg-slate-800">
                         1-29
                       </label>
                     </div>
                     <div className="flex">
                       <input type="radio" id="size-30-249" name="company-size" value="30-249" className="sr-only peer" />
-                      <label htmlFor="size-30-249" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-200 cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700 dark:peer-checked:bg-blue-900/20">
+                      <label htmlFor="size-30-249" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-700 cursor-pointer peer-checked:bg-purple-900/50 peer-checked:border-purple-500 peer-checked:text-white hover:bg-slate-800">
                         30-249
                       </label>
                     </div>
                     <div className="flex">
                       <input type="radio" id="size-250-4999" name="company-size" value="250-4999" className="sr-only peer" />
-                      <label htmlFor="size-250-4999" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-200 cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700 dark:peer-checked:bg-blue-900/20">
+                      <label htmlFor="size-250-4999" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-700 cursor-pointer peer-checked:bg-purple-900/50 peer-checked:border-purple-500 peer-checked:text-white hover:bg-slate-800">
                         250-4999
                       </label>
                     </div>
                     <div className="flex">
                       <input type="radio" id="size-5000+" name="company-size" value="5000+" className="sr-only peer" />
-                      <label htmlFor="size-5000+" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-200 cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700 dark:peer-checked:bg-blue-900/20">
+                      <label htmlFor="size-5000+" className="flex items-center justify-center w-full py-2.5 text-sm font-medium rounded-md border border-slate-700 cursor-pointer peer-checked:bg-purple-900/50 peer-checked:border-purple-500 peer-checked:text-white hover:bg-slate-800">
                         5000+
                       </label>
                     </div>
@@ -140,7 +183,7 @@ const Pricing: React.FC = () => {
                 <div className="pt-4">
                   <Button 
                     type="submit" 
-                    className="w-full bg-black dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white font-medium rounded-lg py-3 px-4 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium rounded-lg py-3 px-4 flex items-center justify-center gap-2"
                   >
                     Request Pricing
                     <ArrowRight className="w-4 h-4" />

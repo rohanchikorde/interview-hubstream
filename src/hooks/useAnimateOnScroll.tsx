@@ -22,6 +22,8 @@ const useAnimateOnScroll = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
+  return null; // No need to return anything, this is just for the side effect
 };
 
 export default useAnimateOnScroll;

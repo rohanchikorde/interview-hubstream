@@ -20,26 +20,26 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 263 70% 50%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --ring: 215 20.2% 65.1%;
+    --ring: 262 83% 58%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
     --muted: 223 47% 11%;
     --muted-foreground: 215.4 16.3% 56.9%;
@@ -53,19 +53,19 @@
     --border: 216 34% 17%;
     --input: 216 34% 17%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 222.2 47.4% 11.2%;
     --secondary-foreground: 210 40% 98%;
 
-    --accent: 216 34% 17%;
+    --accent: 263 70% 60%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --ring: 216 34% 17%;
+    --ring: 263 70% 50%;
 
     --radius: 0.5rem;
   }
@@ -87,11 +87,11 @@
   }
 
   .nav-link {
-    @apply px-4 py-2 font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300;
+    @apply px-4 py-2 font-medium text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300;
   }
 
   .nav-link-active {
-    @apply text-blue-600 dark:text-blue-400;
+    @apply text-purple-600 dark:text-purple-400;
   }
 
   /* Animation utility classes */
@@ -120,6 +120,31 @@
   
   .animation-delay-4000 {
     animation-delay: 4s;
+  }
+
+  /* Purple theme specific utilities */
+  .bg-dark-gradient {
+    @apply bg-black bg-opacity-95;
+  }
+  
+  .text-gradient-purple {
+    @apply bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden;
+  }
+  
+  .form-input {
+    @apply text-left w-full px-4 py-2 bg-transparent border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-left mb-1 text-slate-700 dark:text-slate-300;
+  }
+  
+  .form-group {
+    @apply mb-4;
   }
 }
 
@@ -157,4 +182,13 @@
     max-height: 500px;
     opacity: 1;
   }
+}
+
+/* Custom button styles for the theme */
+.btn-purple {
+  @apply bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50;
+}
+
+.btn-outline-purple {
+  @apply border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white px-6 py-2.5 font-medium rounded-lg transition-colors duration-300;
 }
