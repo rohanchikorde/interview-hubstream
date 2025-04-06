@@ -58,6 +58,16 @@ import OrganizationPositions from '@/pages/organization/OrganizationPositions';
 import OrganizationNotifications from '@/pages/organization/OrganizationNotifications';
 import OrganizationSupport from '@/pages/organization/OrganizationSupport';
 
+// Interviewer pages
+import InterviewerDashboard from '@/pages/interviewer/InterviewerDashboard';
+import InterviewerOverview from '@/pages/interviewer/InterviewerOverview';
+import InterviewerOpportunities from '@/pages/interviewer/InterviewerOpportunities';
+import InterviewerAssigned from '@/pages/interviewer/InterviewerAssigned';
+import InterviewerHistory from '@/pages/interviewer/InterviewerHistory';
+import InterviewerSupport from '@/pages/interviewer/InterviewerSupport';
+import InterviewerNotifications from '@/pages/interviewer/InterviewerNotifications';
+import InterviewerProfile from '@/pages/interviewer/InterviewerProfile';
+
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -141,6 +151,17 @@ function App() {
               <Route path="positions" element={<OrganizationPositions />} />
               <Route path="notifications" element={<OrganizationNotifications />} />
               <Route path="support" element={<OrganizationSupport />} />
+            </Route>
+            
+            {/* Interviewer Dashboard Routes */}
+            <Route path="/interviewer" element={<ProtectedRoute><InterviewerDashboard /></ProtectedRoute>}>
+              <Route index element={<InterviewerOverview />} />
+              <Route path="opportunities" element={<InterviewerOpportunities />} />
+              <Route path="assigned" element={<InterviewerAssigned />} />
+              <Route path="history" element={<InterviewerHistory />} />
+              <Route path="support" element={<InterviewerSupport />} />
+              <Route path="notifications" element={<InterviewerNotifications />} />
+              <Route path="profile" element={<InterviewerProfile />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
