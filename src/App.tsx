@@ -32,6 +32,10 @@ import InterviewsPage from '@/pages/interviews/InterviewsPage';
 import InterviewDetailPage from '@/pages/interviews/InterviewDetailPage';
 import ScheduleInterviewPage from '@/pages/interviews/ScheduleInterviewPage';
 
+// Candidates pages
+import CandidatesPage from '@/pages/candidates/CandidatesPage';
+import CandidateDetailPage from '@/pages/candidates/CandidateDetailPage';
+
 // Admin pages
 import CompaniesPage from '@/pages/admin/CompaniesPage';
 import CompanyDetailPage from '@/pages/admin/CompanyDetailPage';
@@ -42,6 +46,8 @@ import InterviewerDashboardPage from '@/pages/admin/InterviewerDashboardPage';
 import InterviewerManagementPage from '@/pages/admin/InterviewerManagementPage';
 import NewInterviewerPage from '@/pages/admin/NewInterviewerPage';
 import SettingsPage from '@/pages/admin/SettingsPage';
+import SkillsPage from '@/pages/admin/SkillsPage';
+import SkillDetailPage from '@/pages/admin/SkillDetailPage';
 
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
@@ -99,6 +105,10 @@ function App() {
               <Route path="interviews/schedule" element={<ScheduleInterviewPage />} />
               <Route path="interviews/:id" element={<InterviewDetailPage />} />
               
+              {/* Candidates Routes */}
+              <Route path="candidates" element={<CandidatesPage />} />
+              <Route path="candidates/:candidateId" element={<CandidateDetailPage />} />
+              
               {/* Admin Routes */}
               <Route path="admin/companies" element={<CompaniesPage />} />
               <Route path="admin/companies/new" element={<NewCompanyPage />} />
@@ -108,6 +118,8 @@ function App() {
               <Route path="admin/interviewers/new" element={<NewInterviewerPage />} />
               <Route path="admin/interviewers/:interviewerId" element={<InterviewerDetailPage />} />
               <Route path="admin/interviewers/:interviewerId/dashboard" element={<InterviewerDashboardPage />} />
+              <Route path="admin/skills" element={<SkillsPage />} />
+              <Route path="admin/skills/:skillId" element={<SkillDetailPage />} />
               <Route path="admin/settings" element={<SettingsPage />} />
             </Route>
             

@@ -1,4 +1,3 @@
-
 export interface Company {
   id: string;
   name: string;
@@ -54,6 +53,26 @@ export interface AdminProfile {
     allowPublicAccess: boolean;
     defaultInterviewDuration: string;
   };
+}
+
+export interface InterviewTrend {
+  week: string;
+  count: number;
+}
+
+export interface InterviewerPerformance {
+  name: string;
+  interviews: number;
+}
+
+export interface CompanyActivity {
+  company: string;
+  percentage: number;
+}
+
+export interface PlatformStats {
+  averageTimeToHire: string;
+  demoRequestRate: string;
 }
 
 export const mockCompanies: Company[] = [
@@ -163,6 +182,67 @@ export const mockAdminProfile: AdminProfile = {
     allowPublicAccess: false,
     defaultInterviewDuration: '1 hour'
   }
+};
+
+// New mock data for analytics
+export const mockInterviewTrends: Record<string, InterviewTrend[]> = {
+  '1': [
+    { week: "03/09/2025", count: 10 },
+    { week: "03/16/2025", count: 15 },
+    { week: "03/23/2025", count: 8 },
+    { week: "03/30/2025", count: 12 }
+  ],
+  '2': [
+    { week: "03/09/2025", count: 8 },
+    { week: "03/16/2025", count: 12 },
+    { week: "03/23/2025", count: 15 },
+    { week: "03/30/2025", count: 10 }
+  ],
+  '3': [
+    { week: "03/09/2025", count: 5 },
+    { week: "03/16/2025", count: 7 },
+    { week: "03/23/2025", count: 4 },
+    { week: "03/30/2025", count: 6 }
+  ],
+  '4': [
+    { week: "03/09/2025", count: 14 },
+    { week: "03/16/2025", count: 18 },
+    { week: "03/23/2025", count: 16 },
+    { week: "03/30/2025", count: 20 }
+  ],
+};
+
+export const mockInterviewerPerformance: Record<string, InterviewerPerformance[]> = {
+  '1': [
+    { name: "Alice Chen", interviews: 8 },
+    { name: "Bob Wilson", interviews: 12 },
+    { name: "Carol Davis", interviews: 5 }
+  ],
+  '2': [
+    { name: "David Miller", interviews: 15 },
+    { name: "Emily White", interviews: 9 }
+  ],
+  '3': [
+    { name: "Frank Lopez", interviews: 6 },
+    { name: "Grace Kim", interviews: 4 }
+  ],
+  '4': [
+    { name: "Henry Adams", interviews: 10 },
+    { name: "Irene Garcia", interviews: 8 },
+    { name: "Jack Thompson", interviews: 14 }
+  ],
+};
+
+export const mockCompanyActivity: CompanyActivity[] = [
+  { company: "Acme Corp", percentage: 30 },
+  { company: "Globex Industries", percentage: 25 },
+  { company: "Oceanic Airlines", percentage: 15 },
+  { company: "Initech Solutions", percentage: 30 }
+];
+
+export const mockPlatformStats: PlatformStats = {
+  averageTimeToHire: "2 days",
+  demoRequestRate: "80%"
 };
 
 // Helper function to get all interviewers across companies
