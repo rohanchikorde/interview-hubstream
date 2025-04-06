@@ -49,6 +49,15 @@ import SettingsPage from '@/pages/admin/SettingsPage';
 import SkillsPage from '@/pages/admin/SkillsPage';
 import SkillDetailPage from '@/pages/admin/SkillDetailPage';
 
+// Organization pages
+import OrganizationDashboard from '@/pages/organization/OrganizationDashboard';
+import OrganizationInterviews from '@/pages/organization/OrganizationInterviews';
+import OrganizationInterviewers from '@/pages/organization/OrganizationInterviewers';
+import OrganizationAnalytics from '@/pages/organization/OrganizationAnalytics';
+import OrganizationPositions from '@/pages/organization/OrganizationPositions';
+import OrganizationNotifications from '@/pages/organization/OrganizationNotifications';
+import OrganizationSupport from '@/pages/organization/OrganizationSupport';
+
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -121,6 +130,17 @@ function App() {
               <Route path="admin/skills" element={<SkillsPage />} />
               <Route path="admin/skills/:skillId" element={<SkillDetailPage />} />
               <Route path="admin/settings" element={<SettingsPage />} />
+            </Route>
+            
+            {/* Organization Client Dashboard Routes */}
+            <Route path="/organization" element={<ProtectedRoute><OrganizationDashboard /></ProtectedRoute>}>
+              <Route index element={<OrganizationInterviews />} />
+              <Route path="interviews" element={<OrganizationInterviews />} />
+              <Route path="interviewers" element={<OrganizationInterviewers />} />
+              <Route path="analytics" element={<OrganizationAnalytics />} />
+              <Route path="positions" element={<OrganizationPositions />} />
+              <Route path="notifications" element={<OrganizationNotifications />} />
+              <Route path="support" element={<OrganizationSupport />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
