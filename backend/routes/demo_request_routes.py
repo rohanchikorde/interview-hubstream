@@ -124,3 +124,8 @@ def update_demo_request(current_user, demo_request_id):
   except Exception as e:
     logger.error(f"Error in update_demo_request: {str(e)}")
     return jsonify({"status": "error", "message": str(e)}), 500
+
+# Add OPTIONS method to handle preflight requests explicitly
+@demo_request_bp.route('/', methods=['OPTIONS'])
+def handle_options():
+  return '', 204

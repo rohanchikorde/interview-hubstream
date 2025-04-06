@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -59,6 +58,8 @@ const RequestDemo: React.FC = () => {
         })
       };
       
+      console.log('Sending demo request:', requestData);
+      
       // Send the data to the backend API - update with the correct endpoint
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
       const response = await fetch(`${API_BASE_URL}/api/demo-requests`, {
@@ -67,16 +68,19 @@ const RequestDemo: React.FC = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        credentials: 'include',
+        // Don't include credentials to avoid CORS preflight issues
         body: JSON.stringify(requestData)
       });
       
-      console.log('Demo request response:', response);
+      console.log('Demo request response status:', response.status);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit demo request');
+        const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+        throw new Error(errorData.message || `Failed to submit demo request: ${response.status}`);
       }
+      
+      const responseData = await response.json();
+      console.log('Demo request success:', responseData);
       
       toast({
         title: "Demo request received!",

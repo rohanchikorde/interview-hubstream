@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 # Configure CORS to allow requests from any origin (for development)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}}, allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"], expose_headers=["Access-Control-Allow-Origin"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Initialize Supabase client
 supabase_url = os.getenv('SUPABASE_URL')
