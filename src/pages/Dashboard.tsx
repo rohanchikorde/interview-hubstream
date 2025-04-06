@@ -1,8 +1,17 @@
+
 import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Sidebar } from '@/components/ui/sidebar';
+import { 
+  Sidebar, 
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton
+} from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Sheet, 
@@ -15,7 +24,10 @@ import {
   List, 
   LogOut, 
   Calendar, 
-  Ticket
+  Ticket,
+  Building,
+  Users,
+  Settings
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -29,12 +41,12 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 w-full">
       <Sidebar className="hidden lg:flex">
         <div className="flex flex-col h-full">
           <div className="flex-1 py-4">
             <h2 className="px-7 mb-2 text-lg font-semibold tracking-tight">
-              Dashboard
+              Hirevantage
             </h2>
             <nav className="space-y-1 px-4">
               <Link
@@ -70,6 +82,46 @@ const Dashboard: React.FC = () => {
                 <Calendar className="h-4 w-4" />
                 Interviews
               </Link>
+              
+              {/* Admin Section */}
+              <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Administration
+                </h3>
+                <Link
+                  to="/dashboard/admin/companies"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                    location.pathname.includes('/dashboard/admin/companies') &&
+                      "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                  )}
+                >
+                  <Building className="h-4 w-4" />
+                  Companies
+                </Link>
+                <Link
+                  to="/dashboard/admin/interviewers"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                    location.pathname.includes('/dashboard/admin/interviewers') &&
+                      "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                  )}
+                >
+                  <Users className="h-4 w-4" />
+                  Interviewers
+                </Link>
+                <Link
+                  to="/dashboard/admin/settings"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                    location.pathname.includes('/dashboard/admin/settings') &&
+                      "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                  )}
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Link>
+              </div>
             </nav>
           </div>
           <div className="py-4 px-6">
@@ -129,6 +181,46 @@ const Dashboard: React.FC = () => {
                     <Calendar className="h-4 w-4" />
                     Interviews
                   </Link>
+                  
+                  {/* Admin Section in Mobile Menu */}
+                  <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="px-3 mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Administration
+                    </h3>
+                    <Link
+                      to="/dashboard/admin/companies"
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                        location.pathname.includes('/dashboard/admin/companies') &&
+                          "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                      )}
+                    >
+                      <Building className="h-4 w-4" />
+                      Companies
+                    </Link>
+                    <Link
+                      to="/dashboard/admin/interviewers"
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                        location.pathname.includes('/dashboard/admin/interviewers') &&
+                          "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                      )}
+                    >
+                      <Users className="h-4 w-4" />
+                      Interviewers
+                    </Link>
+                    <Link
+                      to="/dashboard/admin/settings"
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50",
+                        location.pathname.includes('/dashboard/admin/settings') &&
+                          "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-50"
+                      )}
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </div>
                   <Link
                     to="#"
                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-gray-900 dark:hover:text-gray-50"
@@ -145,7 +237,7 @@ const Dashboard: React.FC = () => {
             </Sheet>
             <Link to="/" className="flex items-center gap-2">
               <Image src="/assets/logo.png" alt="Logo" className="h-8 w-8" />
-              <span className="font-bold">InterVue</span>
+              <span className="font-bold">Hirevantage</span>
             </Link>
           </div>
           <nav className="hidden md:flex items-center gap-6">
@@ -182,9 +274,47 @@ const Dashboard: React.FC = () => {
             >
               Interviews
             </Link>
+            <Link
+              to="/dashboard/admin/companies"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                location.pathname.includes('/dashboard/admin/companies')
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
+            >
+              Companies
+            </Link>
+            <Link
+              to="/dashboard/admin/interviewers"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                location.pathname.includes('/dashboard/admin/interviewers')
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
+            >
+              Interviewers
+            </Link>
+            <Link
+              to="/dashboard/admin/settings"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                location.pathname.includes('/dashboard/admin/settings')
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
+            >
+              Settings
+            </Link>
           </nav>
           <div className="flex items-center gap-4">
-            
+            <Link to="/dashboard/admin/settings" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-medium">
+                AJ
+              </div>
+              <span className="text-sm font-medium hidden sm:inline">Alex Johnson</span>
+            </Link>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6">
