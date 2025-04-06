@@ -28,7 +28,8 @@ import {
   Building,
   Users,
   Settings,
-  Briefcase
+  Briefcase,
+  UserRound
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -84,6 +85,17 @@ const Dashboard: React.FC = () => {
               >
                 <Calendar className="h-4 w-4" />
                 Interviews
+              </Link>
+              <Link
+                to="/dashboard/candidates"
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
+                  location.pathname.includes('/dashboard/candidates') &&
+                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                )}
+              >
+                <UserRound className="h-4 w-4" />
+                Candidates
               </Link>
               
               {/* Admin Section */}
@@ -200,6 +212,17 @@ const Dashboard: React.FC = () => {
                     <Calendar className="h-4 w-4" />
                     Interviews
                   </Link>
+                  <Link
+                    to="/dashboard/candidates"
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
+                      location.pathname.includes('/dashboard/candidates') &&
+                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                    )}
+                  >
+                    <UserRound className="h-4 w-4" />
+                    Candidates
+                  </Link>
                   
                   {/* Admin Section in Mobile Menu */}
                   <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
@@ -303,6 +326,17 @@ const Dashboard: React.FC = () => {
               )}
             >
               Interviews
+            </Link>
+            <Link
+              to="/dashboard/candidates"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-purple-600",
+                location.pathname.includes('/dashboard/candidates')
+                  ? "text-purple-600"
+                  : "text-muted-foreground"
+              )}
+            >
+              Candidates
             </Link>
             <Link
               to="/dashboard/admin/companies"

@@ -32,6 +32,10 @@ import InterviewsPage from '@/pages/interviews/InterviewsPage';
 import InterviewDetailPage from '@/pages/interviews/InterviewDetailPage';
 import ScheduleInterviewPage from '@/pages/interviews/ScheduleInterviewPage';
 
+// Candidates pages
+import CandidatesPage from '@/pages/candidates/CandidatesPage';
+import CandidateDetailPage from '@/pages/candidates/CandidateDetailPage';
+
 // Admin pages
 import CompaniesPage from '@/pages/admin/CompaniesPage';
 import CompanyDetailPage from '@/pages/admin/CompanyDetailPage';
@@ -100,6 +104,10 @@ function App() {
               <Route path="interviews" element={<InterviewsPage />} />
               <Route path="interviews/schedule" element={<ScheduleInterviewPage />} />
               <Route path="interviews/:id" element={<InterviewDetailPage />} />
+              
+              {/* Candidates Routes */}
+              <Route path="candidates" element={<CandidatesPage />} />
+              <Route path="candidates/:candidateId" element={<CandidateDetailPage />} />
               
               {/* Admin Routes */}
               <Route path="admin/companies" element={<CompaniesPage />} />
