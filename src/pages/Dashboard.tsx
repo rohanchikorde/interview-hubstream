@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -293,96 +292,8 @@ const Dashboard: React.FC = () => {
               <span className="font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Hirevantage</span>
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/dashboard/requirements"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/requirements')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Requirements
-            </Link>
-            <Link
-              to="/dashboard/tickets"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/tickets')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Tickets
-            </Link>
-            <Link
-              to="/dashboard/interviews"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/interviews')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Interviews
-            </Link>
-            <Link
-              to="/dashboard/candidates"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/candidates')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Candidates
-            </Link>
-            <Link
-              to="/dashboard/admin/companies"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/admin/companies')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Companies
-            </Link>
-            <Link
-              to="/dashboard/admin/interviewers"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/admin/interviewers')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Interviewers
-            </Link>
-            <Link
-              to="/dashboard/admin/skills"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/admin/skills')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Skills
-            </Link>
-            <Link
-              to="/dashboard/admin/settings"
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-purple-600",
-                location.pathname.includes('/dashboard/admin/settings')
-                  ? "text-purple-600"
-                  : "text-muted-foreground"
-              )}
-            >
-              Settings
-            </Link>
-          </nav>
+          {/* Remove top navigation bar and keep just the profile */}
+          <div className="flex-1"></div>
           <div className="flex items-center gap-4">
             <Link to="/dashboard/admin/settings" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-medium">
