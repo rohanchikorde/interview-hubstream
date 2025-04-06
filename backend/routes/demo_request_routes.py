@@ -1,4 +1,3 @@
-
 from flask import Blueprint, request, jsonify
 from app import supabase, logger
 from utils.auth_middleware import token_required
@@ -31,10 +30,12 @@ def create_demo_request():
     logger.info(f"Received demo request data: {data}")
     
     # Validate required fields
-    required_fields = ['name', 'email']
-    for field in required_fields:
-      if field not in data:
-        return jsonify({"status": "error", "message": f"Missing required field: {field}"}), 400
+    required_fields = ['name', 'email', 'company_name']
+    missing_fields = [field for field in required_fields if field not in data or not data[field]]
+    
+    if missing_fields:
+      logger.warning(f"Missing required fields: {', '.join(missing_fields)}")
+      return jsonify({"status": "error", "message": f"Missing required fields: {', '.join(missing_fields)}"}), 400
     
     # Set default status if not provided
     if 'status' not in data:
@@ -72,6 +73,7 @@ def create_demo_request():
     logger.error(f"Error in create_demo_request: {str(e)}")
     return jsonify({"status": "error", "message": str(e)}), 500
 
+# Update endpoint to handle a single demo request by ID
 @demo_request_bp.route('/<demo_request_id>', methods=['PUT'])
 @token_required
 def update_demo_request(current_user, demo_request_id):

@@ -28,8 +28,7 @@ export const apiCall = async <T>(
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
-    },
-    credentials: 'include'
+    }
   };
   
   if (data && (method === 'POST' || method === 'PUT')) {
