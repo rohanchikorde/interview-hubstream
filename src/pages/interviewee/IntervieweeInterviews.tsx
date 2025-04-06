@@ -58,7 +58,7 @@ const IntervieweeInterviews: React.FC = () => {
         <CardContent className="p-5">
           <div className="mb-4">
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search by company or position..."
                 className="pl-10"
