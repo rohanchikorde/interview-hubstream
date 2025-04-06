@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -8,7 +9,8 @@ import {
   BarChart3,
   BriefcaseIcon,
   ChartBar,
-  Award
+  Award,
+  Calendar
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
