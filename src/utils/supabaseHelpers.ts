@@ -6,7 +6,7 @@ import { Database } from "@/integrations/supabase/database.types";
 type TableName = keyof Database['public']['Tables'];
 
 // This helper provides a workaround for TypeScript errors with tables not defined in types.ts
-export const supabaseTable = (tableName: TableName) => {
+export const supabaseTable = <T extends TableName>(tableName: T) => {
   return supabase.from(tableName);
 };
 

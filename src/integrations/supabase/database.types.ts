@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -232,6 +231,41 @@ export interface Database {
           name?: string
           created_at?: string
           updated_at?: string
+        }
+      }
+      demo_requests: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          company_name: string | null
+          message: string | null
+          status: string
+          created_at: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          company_name?: string | null
+          message?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          company_name?: string | null
+          message?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string | null
         }
       }
     }
