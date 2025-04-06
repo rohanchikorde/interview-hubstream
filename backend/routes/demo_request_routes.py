@@ -28,6 +28,7 @@ def get_demo_requests(current_user):
 def create_demo_request():
   try:
     data = request.get_json()
+    logger.info(f"Received demo request data: {data}")
     
     # Validate required fields
     required_fields = ['name', 'email']
@@ -35,20 +36,31 @@ def create_demo_request():
       if field not in data:
         return jsonify({"status": "error", "message": f"Missing required field: {field}"}), 400
     
+    # Set default status if not provided
+    if 'status' not in data:
+      data['status'] = 'pending'
+    
+    logger.info(f"Inserting demo request into Supabase: {data}")
+    
     # Create demo request
     response = supabase.table('demo_requests').insert(data).execute()
+    logger.info(f"Supabase response: {response}")
     
     if not response.data:
       return jsonify({"status": "error", "message": "Failed to create demo request"}), 500
     
-    # Create notification for admins
-    admin_response = supabase.table('users').select('id').eq('role', 'admin').execute()
-    for admin in admin_response.data:
-      notification_data = {
-        'user_id': admin['id'],
-        'message': f"New demo request from {data['name']} ({data['email']})"
-      }
-      supabase.table('notifications').insert(notification_data).execute()
+    try:
+      # Create notification for admins
+      admin_response = supabase.table('users').select('id').eq('role', 'admin').execute()
+      for admin in admin_response.data:
+        notification_data = {
+          'user_id': admin['id'],
+          'message': f"New demo request from {data['name']} ({data['email']})"
+        }
+        supabase.table('notifications').insert(notification_data).execute()
+    except Exception as notify_error:
+      logger.error(f"Error creating admin notification: {str(notify_error)}")
+      # Continue execution even if notification fails
     
     return jsonify({
       "status": "success",

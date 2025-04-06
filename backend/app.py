@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow requests from any origin (for development)
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
 # Initialize Supabase client
 supabase_url = os.getenv('SUPABASE_URL')
@@ -58,4 +59,4 @@ def server_error(e):
   return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 if __name__ == '__main__':
-  app.run(debug=True)
+  app.run(debug=True, host='0.0.0.0')

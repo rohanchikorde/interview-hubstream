@@ -59,14 +59,19 @@ const RequestDemo: React.FC = () => {
         })
       };
       
-      // Send the data to the backend API
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/demo-requests`, {
+      // Send the data to the backend API - update with the correct endpoint
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_BASE_URL}/api/demo-requests`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify(requestData)
       });
+      
+      console.log('Demo request response:', response);
       
       if (!response.ok) {
         const errorData = await response.json();
