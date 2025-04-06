@@ -49,6 +49,34 @@ import SettingsPage from '@/pages/admin/SettingsPage';
 import SkillsPage from '@/pages/admin/SkillsPage';
 import SkillDetailPage from '@/pages/admin/SkillDetailPage';
 
+// Organization pages
+import OrganizationDashboard from '@/pages/organization/OrganizationDashboard';
+import OrganizationInterviews from '@/pages/organization/OrganizationInterviews';
+import OrganizationInterviewers from '@/pages/organization/OrganizationInterviewers';
+import OrganizationAnalytics from '@/pages/organization/OrganizationAnalytics';
+import OrganizationPositions from '@/pages/organization/OrganizationPositions';
+import OrganizationNotifications from '@/pages/organization/OrganizationNotifications';
+import OrganizationSupport from '@/pages/organization/OrganizationSupport';
+
+// Interviewer pages
+import InterviewerDashboard from '@/pages/interviewer/InterviewerDashboard';
+import InterviewerOverview from '@/pages/interviewer/InterviewerOverview';
+import InterviewerOpportunities from '@/pages/interviewer/InterviewerOpportunities';
+import InterviewerAssigned from '@/pages/interviewer/InterviewerAssigned';
+import InterviewerHistory from '@/pages/interviewer/InterviewerHistory';
+import InterviewerSupport from '@/pages/interviewer/InterviewerSupport';
+import InterviewerNotifications from '@/pages/interviewer/InterviewerNotifications';
+import InterviewerProfile from '@/pages/interviewer/InterviewerProfile';
+
+// Interviewee pages
+import IntervieweeDashboard from '@/pages/interviewee/IntervieweeDashboard';
+import IntervieweeOverview from '@/pages/interviewee/IntervieweeOverview';
+import IntervieweeInterviews from '@/pages/interviewee/IntervieweeInterviews';
+import IntervieweeCoding from '@/pages/interviewee/IntervieweeCoding';
+import IntervieweeSupport from '@/pages/interviewee/IntervieweeSupport';
+import IntervieweeNotifications from '@/pages/interviewee/IntervieweeNotifications';
+import IntervieweeProfile from '@/pages/interviewee/IntervieweeProfile';
+
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -121,6 +149,38 @@ function App() {
               <Route path="admin/skills" element={<SkillsPage />} />
               <Route path="admin/skills/:skillId" element={<SkillDetailPage />} />
               <Route path="admin/settings" element={<SettingsPage />} />
+            </Route>
+            
+            {/* Organization Client Dashboard Routes */}
+            <Route path="/organization" element={<ProtectedRoute><OrganizationDashboard /></ProtectedRoute>}>
+              <Route index element={<OrganizationInterviews />} />
+              <Route path="interviews" element={<OrganizationInterviews />} />
+              <Route path="interviewers" element={<OrganizationInterviewers />} />
+              <Route path="analytics" element={<OrganizationAnalytics />} />
+              <Route path="positions" element={<OrganizationPositions />} />
+              <Route path="notifications" element={<OrganizationNotifications />} />
+              <Route path="support" element={<OrganizationSupport />} />
+            </Route>
+            
+            {/* Interviewer Dashboard Routes */}
+            <Route path="/interviewer" element={<ProtectedRoute><InterviewerDashboard /></ProtectedRoute>}>
+              <Route index element={<InterviewerOverview />} />
+              <Route path="opportunities" element={<InterviewerOpportunities />} />
+              <Route path="assigned" element={<InterviewerAssigned />} />
+              <Route path="history" element={<InterviewerHistory />} />
+              <Route path="support" element={<InterviewerSupport />} />
+              <Route path="notifications" element={<InterviewerNotifications />} />
+              <Route path="profile" element={<InterviewerProfile />} />
+            </Route>
+            
+            {/* Interviewee Dashboard Routes */}
+            <Route path="/interviewee" element={<ProtectedRoute><IntervieweeDashboard /></ProtectedRoute>}>
+              <Route index element={<IntervieweeOverview />} />
+              <Route path="interviews" element={<IntervieweeInterviews />} />
+              <Route path="coding" element={<IntervieweeCoding />} />
+              <Route path="support" element={<IntervieweeSupport />} />
+              <Route path="notifications" element={<IntervieweeNotifications />} />
+              <Route path="profile" element={<IntervieweeProfile />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
