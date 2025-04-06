@@ -42,6 +42,8 @@ import InterviewerDashboardPage from '@/pages/admin/InterviewerDashboardPage';
 import InterviewerManagementPage from '@/pages/admin/InterviewerManagementPage';
 import NewInterviewerPage from '@/pages/admin/NewInterviewerPage';
 import SettingsPage from '@/pages/admin/SettingsPage';
+import SkillsPage from '@/pages/admin/SkillsPage';
+import SkillDetailPage from '@/pages/admin/SkillDetailPage';
 
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
@@ -108,6 +110,8 @@ function App() {
               <Route path="admin/interviewers/new" element={<NewInterviewerPage />} />
               <Route path="admin/interviewers/:interviewerId" element={<InterviewerDetailPage />} />
               <Route path="admin/interviewers/:interviewerId/dashboard" element={<InterviewerDashboardPage />} />
+              <Route path="admin/skills" element={<SkillsPage />} />
+              <Route path="admin/skills/:skillId" element={<SkillDetailPage />} />
               <Route path="admin/settings" element={<SettingsPage />} />
             </Route>
             

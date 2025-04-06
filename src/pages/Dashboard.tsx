@@ -27,7 +27,8 @@ import {
   Ticket,
   Building,
   Users,
-  Settings
+  Settings,
+  Briefcase
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -111,6 +112,17 @@ const Dashboard: React.FC = () => {
                 >
                   <Users className="h-4 w-4" />
                   Interviewers
+                </Link>
+                <Link
+                  to="/dashboard/admin/skills"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
+                    location.pathname.includes('/dashboard/admin/skills') &&
+                      "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                  )}
+                >
+                  <Briefcase className="h-4 w-4" />
+                  Skills
                 </Link>
                 <Link
                   to="/dashboard/admin/settings"
@@ -217,6 +229,17 @@ const Dashboard: React.FC = () => {
                       Interviewers
                     </Link>
                     <Link
+                      to="/dashboard/admin/skills"
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
+                        location.pathname.includes('/dashboard/admin/skills') &&
+                          "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                      )}
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      Skills
+                    </Link>
+                    <Link
                       to="/dashboard/admin/settings"
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
@@ -302,6 +325,17 @@ const Dashboard: React.FC = () => {
               )}
             >
               Interviewers
+            </Link>
+            <Link
+              to="/dashboard/admin/skills"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-purple-600",
+                location.pathname.includes('/dashboard/admin/skills')
+                  ? "text-purple-600"
+                  : "text-muted-foreground"
+              )}
+            >
+              Skills
             </Link>
             <Link
               to="/dashboard/admin/settings"
