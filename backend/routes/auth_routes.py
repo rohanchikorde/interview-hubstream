@@ -1,154 +1,166 @@
 
 from flask import Blueprint, request, jsonify
-import bcrypt
 import jwt
-import datetime
+import bcrypt
 import os
-from app import supabase, logger
+from datetime import datetime, timedelta
+from supabase.client import ClientClass
+
+from app import supabase
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     try:
-        data = request.get_json()
+        data = request.json
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
         
-        # Validate required fields
-        required_fields = ['email', 'password', 'name', 'role']
+        # Check if required fields are present
+        required_fields = ['name', 'email', 'password', 'role']
         for field in required_fields:
             if field not in data:
-                return jsonify({"status": "error", "message": f"Missing required field: {field}"}), 400
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Field {field} is required'
+                }), 400
         
-        email = data['email']
-        password = data['password']
-        name = data['name']
-        role = data['role']
-        
-        # Check if user already exists
+        # Check if email already exists
+        email = data['email'].lower()
         response = supabase.table('users').select('*').eq('email', email).execute()
-        if response.data:
-            return jsonify({"status": "error", "message": "User with this email already exists"}), 400
+        
+        if response.data and len(response.data) > 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'Email already exists'
+            }), 400
         
         # Hash password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        password_hash = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         # Create user
         user_data = {
+            'name': data['name'],
             'email': email,
-            'password_hash': hashed_password,
-            'name': name,
-            'role': role
+            'password_hash': password_hash,
+            'role': data['role']
         }
         
         response = supabase.table('users').insert(user_data).execute()
         
-        if not response.data:
-            return jsonify({"status": "error", "message": "Failed to create user"}), 500
+        if not response.data or len(response.data) == 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'Error creating user'
+            }), 500
         
-        user_id = response.data[0]['id']
+        user = response.data[0]
         
-        # Create role-specific record
+        # Create record in role-specific table
+        role = data['role']
         if role == 'admin':
-            supabase.table('admins').insert({'user_id': user_id}).execute()
+            supabase.table('admins').insert({'user_id': user['id']}).execute()
         elif role == 'organization':
-            org_name = data.get('organization_name', name + "'s Organization")
-            supabase.table('organizations').insert({'user_id': user_id, 'name': org_name}).execute()
+            org_data = {
+                'user_id': user['id'],
+                'name': data.get('organization_name', data['name'] + "'s Organization")
+            }
+            supabase.table('organizations').insert(org_data).execute()
         elif role == 'interviewer':
-            supabase.table('interviewers').insert({'user_id': user_id}).execute()
+            interviewer_data = {'user_id': user['id']}
+            supabase.table('interviewers').insert(interviewer_data).execute()
         elif role == 'interviewee':
-            supabase.table('interviewees').insert({'user_id': user_id}).execute()
+            interviewee_data = {'user_id': user['id']}
+            supabase.table('interviewees').insert(interviewee_data).execute()
         
-        return jsonify({"status": "success", "message": "User registered successfully"}), 201
-    
+        # Generate JWT token
+        token = jwt.encode({
+            'user_id': user['id'],
+            'email': user['email'],
+            'role': user['role'],
+            'exp': datetime.utcnow() + timedelta(days=1)
+        }, os.getenv('FLASK_SECRET_KEY'), algorithm='HS256')
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'User registered successfully',
+            'token': token,
+            'user': {
+                'id': user['id'],
+                'name': user['name'],
+                'email': user['email'],
+                'role': user['role']
+            }
+        }), 201
+        
     except Exception as e:
-        logger.error(f"Error in register: {str(e)}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
-        data = request.get_json()
+        data = request.json
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
         
-        # Validate required fields
+        # Check if required fields are present
         if 'email' not in data or 'password' not in data:
-            return jsonify({"status": "error", "message": "Email and password are required"}), 400
+            return jsonify({
+                'status': 'error',
+                'message': 'Email and password are required'
+            }), 400
         
-        email = data['email']
-        password = data['password']
-        
-        # Get user from database
+        # Get user by email
+        email = data['email'].lower()
         response = supabase.table('users').select('*').eq('email', email).execute()
         
-        if not response.data:
-            return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+        if not response.data or len(response.data) == 0:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid credentials'
+            }), 401
         
         user = response.data[0]
         
-        # Verify password
-        if not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
-            return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+        # Check password
+        if not bcrypt.checkpw(data['password'].encode('utf-8'), user['password_hash'].encode('utf-8')):
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid credentials'
+            }), 401
         
-        # Create JWT token
-        payload = {
+        # Generate JWT token
+        token = jwt.encode({
             'user_id': user['id'],
             'email': user['email'],
             'role': user['role'],
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
-        }
-        
-        token = jwt.encode(payload, os.getenv('FLASK_SECRET_KEY'), algorithm='HS256')
+            'exp': datetime.utcnow() + timedelta(days=1)
+        }, os.getenv('FLASK_SECRET_KEY'), algorithm='HS256')
         
         return jsonify({
-            "status": "success",
-            "message": "Login successful",
-            "token": token,
-            "user": {
-                "id": user['id'],
-                "email": user['email'],
-                "name": user['name'],
-                "role": user['role']
+            'status': 'success',
+            'message': 'Login successful',
+            'token': token,
+            'user': {
+                'id': user['id'],
+                'name': user['name'],
+                'email': user['email'],
+                'role': user['role']
             }
-        })
-    
-    except Exception as e:
-        logger.error(f"Error in login: {str(e)}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@auth_bp.route('/verify', methods=['GET'])
-def verify_token():
-    try:
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({"status": "error", "message": "No valid authorization token provided"}), 401
+        }), 200
         
-        token = auth_header.split(' ')[1]
-        
-        try:
-            payload = jwt.decode(token, os.getenv('FLASK_SECRET_KEY'), algorithms=['HS256'])
-            
-            # Get user from database to ensure they still exist
-            response = supabase.table('users').select('*').eq('id', payload['user_id']).execute()
-            
-            if not response.data:
-                return jsonify({"status": "error", "message": "User not found"}), 401
-            
-            user = response.data[0]
-            
-            return jsonify({
-                "status": "success",
-                "user": {
-                    "id": user['id'],
-                    "email": user['email'],
-                    "name": user['name'],
-                    "role": user['role']
-                }
-            })
-            
-        except jwt.ExpiredSignatureError:
-            return jsonify({"status": "error", "message": "Token has expired"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"status": "error", "message": "Invalid token"}), 401
-    
     except Exception as e:
-        logger.error(f"Error in verify_token: {str(e)}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
