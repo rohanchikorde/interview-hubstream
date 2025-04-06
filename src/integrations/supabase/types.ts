@@ -9,84 +9,422 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      companies: {
+      admins: {
         Row: {
-          address: string | null
-          created_at: string | null
-          description: string | null
-          id: number
-          industry: string | null
-          is_active: boolean | null
-          logo_url: string | null
-          name: string
-          updated_at: string | null
-          user_id: string | null
-          website: string | null
+          created_at: string
+          id: string
+          user_id: string
         }
         Insert: {
-          address?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          industry?: string | null
-          is_active?: boolean | null
-          logo_url?: string | null
-          name: string
-          updated_at?: string | null
-          user_id?: string | null
-          website?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
         }
         Update: {
-          address?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          industry?: string | null
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string
-          updated_at?: string | null
-          user_id?: string | null
-          website?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics: {
+        Row: {
+          candidate_status: Json | null
+          created_at: string
+          id: string
+          interview_trends: Json | null
+          interviewer_performance: Json | null
+          metrics: Json | null
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          candidate_status?: Json | null
+          created_at?: string
+          id?: string
+          interview_trends?: Json | null
+          interviewer_performance?: Json | null
+          metrics?: Json | null
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          candidate_status?: Json | null
+          created_at?: string
+          id?: string
+          interview_trends?: Json | null
+          interviewer_performance?: Json | null
+          metrics?: Json | null
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_requests: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          status: Database["public"]["Enums"]["demo_request_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          status?: Database["public"]["Enums"]["demo_request_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          status?: Database["public"]["Enums"]["demo_request_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviewees: {
+        Row: {
+          completed_interviews: number | null
+          created_at: string
+          id: string
+          scheduled_mock_interviews: number | null
+          upcoming_interviews: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_interviews?: number | null
+          created_at?: string
+          id?: string
+          scheduled_mock_interviews?: number | null
+          upcoming_interviews?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_interviews?: number | null
+          created_at?: string
+          id?: string
+          scheduled_mock_interviews?: number | null
+          upcoming_interviews?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviewees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviewers: {
+        Row: {
+          availability_status:
+            | Database["public"]["Enums"]["availability_status"]
+            | null
+          cancellation_requests: number | null
+          created_at: string
+          feedback_pending: number | null
+          id: string
+          total_interviews: number | null
+          upcoming_interviews: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability_status?:
+            | Database["public"]["Enums"]["availability_status"]
+            | null
+          cancellation_requests?: number | null
+          created_at?: string
+          feedback_pending?: number | null
+          id?: string
+          total_interviews?: number | null
+          upcoming_interviews?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability_status?:
+            | Database["public"]["Enums"]["availability_status"]
+            | null
+          cancellation_requests?: number | null
+          created_at?: string
+          feedback_pending?: number | null
+          id?: string
+          total_interviews?: number | null
+          upcoming_interviews?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviewers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          candidate_name: string
+          created_at: string
+          date_time: string
+          department: string | null
+          feedback: string | null
+          id: string
+          interviewee_id: string
+          interviewer_id: string | null
+          open_since: string | null
+          organization_id: string
+          position_title: string | null
+          required_skill: string | null
+          status: Database["public"]["Enums"]["interview_status"]
+          updated_at: string
+        }
+        Insert: {
+          candidate_name: string
+          created_at?: string
+          date_time: string
+          department?: string | null
+          feedback?: string | null
+          id?: string
+          interviewee_id: string
+          interviewer_id?: string | null
+          open_since?: string | null
+          organization_id: string
+          position_title?: string | null
+          required_skill?: string | null
+          status?: Database["public"]["Enums"]["interview_status"]
+          updated_at?: string
+        }
+        Update: {
+          candidate_name?: string
+          created_at?: string
+          date_time?: string
+          department?: string | null
+          feedback?: string | null
+          id?: string
+          interviewee_id?: string
+          interviewer_id?: string | null
+          open_since?: string | null
+          organization_id?: string
+          position_title?: string | null
+          required_skill?: string | null
+          status?: Database["public"]["Enums"]["interview_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_interviewee_id_fkey"
+            columns: ["interviewee_id"]
+            isOneToOne: false
+            referencedRelation: "interviewees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_interviewer_id_fkey"
+            columns: ["interviewer_id"]
+            isOneToOne: false
+            referencedRelation: "interviewers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_interviews: {
+        Row: {
+          created_at: string
+          date_time: string
+          duration: string
+          id: string
+          interviewee_id: string
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          status: Database["public"]["Enums"]["interview_status"]
+          technology: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_time: string
+          duration: string
+          id?: string
+          interviewee_id: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          status?: Database["public"]["Enums"]["interview_status"]
+          technology: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_time?: string
+          duration?: string
+          id?: string
+          interviewee_id?: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          status?: Database["public"]["Enums"]["interview_status"]
+          technology?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_interviews_interviewee_id_fkey"
+            columns: ["interviewee_id"]
+            isOneToOne: false
+            referencedRelation: "interviewees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          message: string
+          status: Database["public"]["Enums"]["notification_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          message: string
+          status?: Database["public"]["Enums"]["notification_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          message?: string
+          status?: Database["public"]["Enums"]["notification_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          stats: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          stats?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          stats?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
-          created_at: string | null
+          created_at: string
           email: string
-          full_name: string
-          id: number
-          is_active: boolean | null
-          password: string | null
-          phone_number: string
-          role: string
-          updated_at: string | null
-          user_id: string | null
+          id: string
+          name: string
+          password_hash: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           email: string
-          full_name: string
-          id?: number
-          is_active?: boolean | null
-          password?: string | null
-          phone_number: string
-          role: string
-          updated_at?: string | null
-          user_id?: string | null
+          id?: string
+          name: string
+          password_hash: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           email?: string
-          full_name?: string
-          id?: number
-          is_active?: boolean | null
-          password?: string | null
-          phone_number?: string
-          role?: string
-          updated_at?: string | null
-          user_id?: string | null
+          id?: string
+          name?: string
+          password_hash?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -98,7 +436,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      availability_status: "available" | "busy"
+      demo_request_status: "pending" | "approved" | "rejected"
+      interview_status: "scheduled" | "completed" | "cancelled"
+      notification_status: "unread" | "read"
+      payment_status: "pending" | "completed"
+      user_role: "admin" | "organization" | "interviewer" | "interviewee"
     }
     CompositeTypes: {
       [_ in never]: never
