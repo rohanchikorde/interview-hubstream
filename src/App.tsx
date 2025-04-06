@@ -68,6 +68,15 @@ import InterviewerSupport from '@/pages/interviewer/InterviewerSupport';
 import InterviewerNotifications from '@/pages/interviewer/InterviewerNotifications';
 import InterviewerProfile from '@/pages/interviewer/InterviewerProfile';
 
+// Interviewee pages
+import IntervieweeDashboard from '@/pages/interviewee/IntervieweeDashboard';
+import IntervieweeOverview from '@/pages/interviewee/IntervieweeOverview';
+import IntervieweeInterviews from '@/pages/interviewee/IntervieweeInterviews';
+import IntervieweeCoding from '@/pages/interviewee/IntervieweeCoding';
+import IntervieweeSupport from '@/pages/interviewee/IntervieweeSupport';
+import IntervieweeNotifications from '@/pages/interviewee/IntervieweeNotifications';
+import IntervieweeProfile from '@/pages/interviewee/IntervieweeProfile';
+
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -162,6 +171,16 @@ function App() {
               <Route path="support" element={<InterviewerSupport />} />
               <Route path="notifications" element={<InterviewerNotifications />} />
               <Route path="profile" element={<InterviewerProfile />} />
+            </Route>
+            
+            {/* Interviewee Dashboard Routes */}
+            <Route path="/interviewee" element={<ProtectedRoute><IntervieweeDashboard /></ProtectedRoute>}>
+              <Route index element={<IntervieweeOverview />} />
+              <Route path="interviews" element={<IntervieweeInterviews />} />
+              <Route path="coding" element={<IntervieweeCoding />} />
+              <Route path="support" element={<IntervieweeSupport />} />
+              <Route path="notifications" element={<IntervieweeNotifications />} />
+              <Route path="profile" element={<IntervieweeProfile />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
