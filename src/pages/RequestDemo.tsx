@@ -2,16 +2,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Check, 
   ArrowRight, 
   Clock, 
   Users, 
-  Calendar, 
   FileSearch, 
   BarChart3,
   BriefcaseIcon,
   ChartBar,
-  Award
+  Award,
+  Calendar
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -20,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { apiCall } from '@/utils/supabaseHelpers';
 
 const RequestDemo: React.FC = () => {
   const navigate = useNavigate();
@@ -41,19 +41,65 @@ const RequestDemo: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Map form data to backend API format
+      const requestData = {
+        name: formData.fullName,
+        email: formData.workEmail,
+        company_name: formData.companyName,
+        message: formData.goals,
+        additional_info: JSON.stringify({
+          phone: formData.phone,
+          job_title: formData.jobTitle,
+          team_size: formData.teamSize,
+          hear_about: formData.hearAbout
+        })
+      };
+      
+      console.log('Sending demo request:', requestData);
+      
+      // Send the data to the backend API - update with the correct endpoint
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_BASE_URL}/api/demo-requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      console.log('Demo request response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+        throw new Error(errorData.message || `Failed to submit demo request: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('Demo request success:', responseData);
+      
       toast({
         title: "Demo request received!",
         description: "Our team will contact you shortly to schedule your personalized demo.",
       });
+      
+      // Redirect to home page after successful submission
       navigate('/');
-    }, 1500);
+    } catch (error) {
+      console.error('Error submitting demo request:', error);
+      toast({
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

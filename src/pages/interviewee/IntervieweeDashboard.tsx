@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { mockInterviewee } from '@/data/intervieweeMockData';
 import { NavLink } from 'react-router-dom';
-import { Home, Calendar, Code, HelpCircle, Bell, User } from 'lucide-react';
+import { Home, Calendar, Code, HelpCircle, Bell, User, BookOpen } from 'lucide-react';
 
 const IntervieweeDashboard: React.FC = () => {
   const interviewee = mockInterviewee;
@@ -43,6 +43,14 @@ const IntervieweeDashboard: React.FC = () => {
                     <NavLink to="/interviewee/interviews" className={({ isActive }) => isActive ? "text-purple-600" : ""}>
                       <Calendar />
                       <span>Interviews</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/interviewee/mock-interviews" className={({ isActive }) => isActive ? "text-purple-600" : ""}>
+                      <BookOpen />
+                      <span>Mock Interviews</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
