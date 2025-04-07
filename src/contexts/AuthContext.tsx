@@ -1,10 +1,14 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define types for our context
-type Role = 'superadmin' | 'clientadmin' | 'client_coordinator' | 'super_coordinator' | 'interviewer' | 'accountant' | 'guest';
+type Role = 'admin' | 'organization' | 'interviewer' | 'interviewee' | 'guest';
 
-interface User {
+interface AuthUser {
   id: string;
   email: string;
   name: string;
@@ -13,7 +17,7 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
@@ -41,34 +45,8 @@ export function useAuth() {
   return context;
 }
 
-// Sample user data - this would normally come from your backend
-const SAMPLE_USERS = [
-  {
-    id: '1',
-    email: 'admin@intervue.com',
-    password: 'password123',
-    name: 'Admin User',
-    role: 'superadmin' as Role
-  },
-  {
-    id: '2',
-    email: 'client@example.com',
-    password: 'password123',
-    name: 'Client User',
-    role: 'clientadmin' as Role,
-    company: 'ACME Corp'
-  },
-  {
-    id: '3',
-    email: 'interviewer@example.com',
-    password: 'password123',
-    name: 'Interviewer User',
-    role: 'interviewer' as Role
-  }
-];
-
-// Create a guest user that will be used by default
-const GUEST_USER: User = {
+// Create a guest user that will be used by default when no user is authenticated
+const GUEST_USER: AuthUser = {
   id: 'guest',
   email: 'guest@hirevantage.com',
   name: 'Guest User',
@@ -76,49 +54,123 @@ const GUEST_USER: User = {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize with guest user to bypass authentication
-  const [user, setUser] = useState<User | null>(GUEST_USER);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Set to false to avoid loading screen
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
+  // Initialize auth state by checking for existing session
   useEffect(() => {
-    // No need to check localStorage as we're providing guest access by default
-    // The existing authentication code is kept for future reimplementation
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          fetchUserProfile(currentSession);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession) {
+        fetchUserProfile(currentSession);
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Function to fetch user profile including role after authentication
+  const fetchUserProfile = async (currentSession: Session | null) => {
+    if (!currentSession) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch user data from the users table
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email, name, role')
+        .eq('id', currentSession.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user data:', error);
+        setUser(null);
+      } else if (data) {
+        // Set the authenticated user with role information
+        setUser({
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          role: data.role as Role,
+          company: data.company
+        });
+
+        // Redirect to the appropriate dashboard based on the role
+        redirectBasedOnRole(data.role as Role);
+      }
+    } catch (error) {
+      console.error('Exception fetching user data:', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to redirect users based on their role
+  const redirectBasedOnRole = (role: Role) => {
+    switch (role) {
+      case 'admin':
+        navigate('/dashboard');
+        break;
+      case 'organization':
+        navigate('/organization');
+        break;
+      case 'interviewer':
+        navigate('/interviewer');
+        break;
+      case 'interviewee':
+        navigate('/interviewee');
+        break;
+      default:
+        // For unrecognized roles, redirect to the home page
+        navigate('/');
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Keep the existing login logic for future use
-      // Here we would normally make a request to an API to authenticate
-      // For now, we're using sample data for demonstration
-      
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Find user with matching email and password
-      const matchedUser = SAMPLE_USERS.find(
-        u => u.email === email && u.password === password
-      );
-      
-      if (!matchedUser) {
-        toast.error('Invalid email or password');
-        throw new Error('Invalid email or password');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(error.message);
+        throw error;
       }
-      
-      // Remove password from user object
-      const { password: _, ...userWithoutPassword } = matchedUser;
-      
-      // Store user in state and localStorage
-      setUser(userWithoutPassword);
-      localStorage.setItem('intervue_user', JSON.stringify(userWithoutPassword));
-      
-      toast.success(`Welcome back, ${userWithoutPassword.name}!`);
-      
-      // For now, just simulate success
-      toast.success(`Login functionality is currently disabled. Using guest access.`);
-      setUser(GUEST_USER);
-    } catch (error) {
+
+      if (data.session) {
+        // The user profile and redirection will be handled by the auth state change listener
+        toast.success(`Welcome back!`);
+      }
+    } catch (error: any) {
       console.error('Login error:', error);
       throw error;
     } finally {
@@ -129,27 +181,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
-      // Keep the existing register logic for future use
-      // Here we would normally make a request to an API to register
-      // For now, we'll just simulate it
-      
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if user with same email exists
-      if (SAMPLE_USERS.some(u => u.email === userData.email)) {
-        toast.error('A user with this email already exists');
-        throw new Error('User already exists');
+      // Sign up the user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+      });
+
+      if (authError) {
+        toast.error(authError.message);
+        throw authError;
       }
-      
-      // In a real app, we would save this to a database
-      console.log('Registered new user:', userData);
-      
-      toast.success('Account created successfully! Please log in.');
-      
-      // For now, just simulate success
-      toast.success('Registration functionality is currently disabled. Using guest access.');
-    } catch (error) {
+
+      if (authData.user) {
+        // Insert user data into the users table
+        const { error: userError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: authData.user.id,
+              email: userData.email,
+              name: userData.name,
+              role: userData.role,
+              company: userData.company || null,
+              password_hash: 'managed_by_auth' // We don't store the password hash, it's managed by Supabase Auth
+            }
+          ]);
+
+        if (userError) {
+          toast.error('Error creating user profile');
+          console.error('Error creating user profile:', userError);
+          
+          // If creating the user profile fails, delete the auth user
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          throw userError;
+        }
+
+        // Create related record based on role
+        if (userData.role === 'admin') {
+          await supabase.from('admins').insert([{ user_id: authData.user.id }]);
+        } else if (userData.role === 'organization') {
+          await supabase.from('organizations').insert([
+            { user_id: authData.user.id, name: userData.company || 'Default Organization' }
+          ]);
+        } else if (userData.role === 'interviewer') {
+          await supabase.from('interviewers').insert([{ user_id: authData.user.id }]);
+        } else if (userData.role === 'interviewee') {
+          await supabase.from('interviewees').insert([{ user_id: authData.user.id }]);
+        }
+
+        toast.success('Account created successfully! Please log in.');
+        
+        // For better UX, we could automatically log the user in here
+        // But for now, we'll just redirect them to the login page
+        navigate('/login');
+      }
+    } catch (error: any) {
       console.error('Registration error:', error);
       throw error;
     } finally {
@@ -160,23 +246,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true);
     try {
-      // Keep the existing logout logic for future use
-      // Here we would normally make a request to an API to logout
-      // For now, we'll just remove the user from state and localStorage
+      const { error } = await supabase.auth.signOut();
       
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (error) {
+        toast.error('Error signing out');
+        throw error;
+      }
       
+      // Clear user data
       setUser(null);
-      localStorage.removeItem('intervue_user');
+      setSession(null);
       
       toast.success('You have been logged out');
-      
-      // Reset to guest user instead of null
-      setUser(GUEST_USER);
-      localStorage.removeItem('intervue_user');
-      
-      toast.success('Logged out to guest access');
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
@@ -193,7 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        isAuthenticated: true // Always return true to bypass authentication checks
+        isAuthenticated: !!user && user.id !== 'guest'
       }}
     >
       {children}

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -36,7 +35,7 @@ const registerSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string().min(6, { message: 'Please confirm your password' }),
-  role: z.enum(['client', 'interviewer', 'coordinator'], { message: 'Please select a role' })
+  role: z.enum(['organization', 'interviewer', 'interviewee'], { message: 'Please select a role' })
 }).refine(data => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: 'Passwords do not match',
@@ -47,17 +46,21 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const location = useLocation();
+  const { login, register: registerUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get the redirect path from location state if available
+  const from = location.state?.from?.pathname || '/dashboard';
 
   // Initialize the form with the appropriate schema
   const form = useForm<LoginFormValues | RegisterFormValues>({
     resolver: zodResolver(type === 'login' ? loginSchema : registerSchema),
     defaultValues: type === 'login' 
       ? { email: '', password: '' } 
-      : { name: '', company: '', email: '', password: '', confirmPassword: '', role: 'client' }
+      : { name: '', company: '', email: '', password: '', confirmPassword: '', role: 'organization' }
   });
 
   const onSubmit = async (data: LoginFormValues | RegisterFormValues) => {
@@ -67,17 +70,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
       if (type === 'login') {
         const loginData = data as LoginFormValues;
         await login(loginData.email, loginData.password);
-        navigate('/dashboard');
+        // Redirection will be handled by AuthContext upon successful login
       } else {
         const registerData = data as RegisterFormValues;
-        await register({
+        await registerUser({
           name: registerData.name,
           email: registerData.email,
           password: registerData.password,
           role: registerData.role,
           company: registerData.company
         });
-        navigate('/login');
+        // Register function in AuthContext will handle the redirection
       }
     } catch (error) {
       console.error('Authentication error:', error);
@@ -95,7 +98,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         </h1>
         <p className="text-slate-600 dark:text-slate-300">
           {type === 'login' 
-            ? 'Sign in to your Intervue account' 
+            ? 'Sign in to your Hirevantage account' 
             : 'Start streamlining your interview process'}
         </p>
       </div>
@@ -148,9 +151,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-intervue-600/50 focus:border-intervue-600 dark:focus:ring-intervue-500/50 dark:focus:border-intervue-500 transition-all"
                       {...field}
                     >
-                      <option value="client">Hiring Manager / Client</option>
+                      <option value="organization">Hiring Manager / Client</option>
                       <option value="interviewer">Interviewer</option>
-                      <option value="coordinator">Coordinator</option>
+                      <option value="interviewee">Interviewee</option>
                     </select>
                     <FormMessage />
                   </FormItem>

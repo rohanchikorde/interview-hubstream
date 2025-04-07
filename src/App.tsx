@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster.tsx'; 
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -119,8 +119,12 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             
-            {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            {/* Admin Dashboard - Protected for admin role */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute requiredRoles={['admin']}>
+                <Dashboard />
+              </ProtectedRoute>
+            }>
               <Route index element={<RequirementsPage />} />
               <Route path="requirements" element={<RequirementsPage />} />
               <Route path="requirements/new" element={<NewRequirementPage />} />
@@ -152,7 +156,11 @@ function App() {
             </Route>
             
             {/* Organization Client Dashboard Routes */}
-            <Route path="/organization" element={<ProtectedRoute><OrganizationDashboard /></ProtectedRoute>}>
+            <Route path="/organization" element={
+              <ProtectedRoute requiredRoles={['organization']}>
+                <OrganizationDashboard />
+              </ProtectedRoute>
+            }>
               <Route index element={<OrganizationInterviews />} />
               <Route path="interviews" element={<OrganizationInterviews />} />
               <Route path="interviewers" element={<OrganizationInterviewers />} />
@@ -163,7 +171,11 @@ function App() {
             </Route>
             
             {/* Interviewer Dashboard Routes */}
-            <Route path="/interviewer" element={<ProtectedRoute><InterviewerDashboard /></ProtectedRoute>}>
+            <Route path="/interviewer" element={
+              <ProtectedRoute requiredRoles={['interviewer']}>
+                <InterviewerDashboard />
+              </ProtectedRoute>
+            }>
               <Route index element={<InterviewerOverview />} />
               <Route path="opportunities" element={<InterviewerOpportunities />} />
               <Route path="assigned" element={<InterviewerAssigned />} />
@@ -174,7 +186,11 @@ function App() {
             </Route>
             
             {/* Interviewee Dashboard Routes */}
-            <Route path="/interviewee" element={<ProtectedRoute><IntervieweeDashboard /></ProtectedRoute>}>
+            <Route path="/interviewee" element={
+              <ProtectedRoute requiredRoles={['interviewee']}>
+                <IntervieweeDashboard />
+              </ProtectedRoute>
+            }>
               <Route index element={<IntervieweeOverview />} />
               <Route path="interviews" element={<IntervieweeInterviews />} />
               <Route path="coding" element={<IntervieweeCoding />} />
