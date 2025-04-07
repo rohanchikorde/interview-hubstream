@@ -1,0 +1,230 @@
+
+import { supabase } from '@/integrations/supabase/client';
+
+interface DashboardSummary {
+  counts: {
+    interviews: number;
+    interviewers?: number;
+    interviewees?: number;
+    companies?: number;
+    pendingRequests?: number;
+    upcomingInterviews: number;
+    completedInterviews: number;
+    canceledInterviews?: number;
+  };
+  recentActivity?: any[];
+}
+
+export const dashboardService = {
+  /**
+   * Get dashboard data for Admin role
+   */
+  async getAdminDashboardData(): Promise<DashboardSummary> {
+    try {
+      // Fetch counts for various entities
+      const [
+        { count: interviewsCount, error: interviewsError },
+        { count: interviewersCount, error: interviewersError },
+        { count: intervieweesCount, error: intervieweesError },
+        { count: organizationsCount, error: orgsError },
+        { data: pendingRequests, error: pendingError },
+        { data: upcomingInterviews, error: upcomingError },
+        { data: completedInterviews, error: completedError }
+      ] = await Promise.all([
+        supabase.from('interviews').select('*', { count: 'exact', head: true }),
+        supabase.from('interviewers').select('*', { count: 'exact', head: true }),
+        supabase.from('interviewees').select('*', { count: 'exact', head: true }),
+        supabase.from('organizations').select('*', { count: 'exact', head: true }),
+        supabase.from('demo_requests').select('*').eq('status', 'pending'),
+        supabase.from('interviews').select('*').eq('status', 'scheduled').gt('date_time', new Date().toISOString()),
+        supabase.from('interviews').select('*').eq('status', 'completed')
+      ]);
+
+      if (interviewsError || interviewersError || intervieweesError || orgsError || pendingError || upcomingError || completedError) {
+        console.error('Error fetching admin dashboard data');
+        throw new Error('Failed to load dashboard data');
+      }
+
+      return {
+        counts: {
+          interviews: interviewsCount || 0,
+          interviewers: interviewersCount || 0,
+          interviewees: intervieweesCount || 0,
+          companies: organizationsCount || 0,
+          pendingRequests: pendingRequests?.length || 0,
+          upcomingInterviews: upcomingInterviews?.length || 0,
+          completedInterviews: completedInterviews?.length || 0
+        }
+      };
+    } catch (error) {
+      console.error('Error in getAdminDashboardData:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get dashboard data for Organization role
+   */
+  async getOrganizationDashboardData(userId: string): Promise<DashboardSummary> {
+    try {
+      // First get the organization ID for this user
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (orgError) {
+        throw new Error('Failed to find organization data');
+      }
+
+      const organizationId = orgData.id;
+
+      // Fetch data for this organization
+      const [
+        { data: interviews, error: interviewsError },
+        { data: upcomingInterviews, error: upcomingError },
+        { data: completedInterviews, error: completedError }
+      ] = await Promise.all([
+        supabase.from('interviews').select('*').eq('organization_id', organizationId),
+        supabase.from('interviews')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .eq('status', 'scheduled')
+          .gt('date_time', new Date().toISOString()),
+        supabase.from('interviews')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .eq('status', 'completed')
+      ]);
+
+      if (interviewsError || upcomingError || completedError) {
+        throw new Error('Failed to load organization dashboard data');
+      }
+
+      return {
+        counts: {
+          interviews: interviews?.length || 0,
+          upcomingInterviews: upcomingInterviews?.length || 0,
+          completedInterviews: completedInterviews?.length || 0
+        }
+      };
+    } catch (error) {
+      console.error('Error in getOrganizationDashboardData:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get dashboard data for Interviewer role
+   */
+  async getInterviewerDashboardData(userId: string): Promise<DashboardSummary> {
+    try {
+      // First get the interviewer ID for this user
+      const { data: interviewerData, error: interviewerError } = await supabase
+        .from('interviewers')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (interviewerError) {
+        throw new Error('Failed to find interviewer data');
+      }
+
+      const interviewerId = interviewerData.id;
+
+      // Fetch data for this interviewer
+      const [
+        { data: upcomingInterviews, error: upcomingError },
+        { data: completedInterviews, error: completedError },
+        { data: canceledInterviews, error: canceledError }
+      ] = await Promise.all([
+        supabase.from('interviews')
+          .select('*')
+          .eq('interviewer_id', interviewerId)
+          .eq('status', 'scheduled')
+          .gt('date_time', new Date().toISOString()),
+        supabase.from('interviews')
+          .select('*')
+          .eq('interviewer_id', interviewerId)
+          .eq('status', 'completed'),
+        supabase.from('interviews')
+          .select('*')
+          .eq('interviewer_id', interviewerId)
+          .eq('status', 'canceled')
+      ]);
+
+      if (upcomingError || completedError || canceledError) {
+        throw new Error('Failed to load interviewer dashboard data');
+      }
+
+      return {
+        counts: {
+          interviews: (upcomingInterviews?.length || 0) + (completedInterviews?.length || 0) + (canceledInterviews?.length || 0),
+          upcomingInterviews: upcomingInterviews?.length || 0,
+          completedInterviews: completedInterviews?.length || 0,
+          canceledInterviews: canceledInterviews?.length || 0
+        }
+      };
+    } catch (error) {
+      console.error('Error in getInterviewerDashboardData:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get dashboard data for Interviewee role
+   */
+  async getIntervieweeDashboardData(userId: string): Promise<DashboardSummary> {
+    try {
+      // First get the interviewee ID for this user
+      const { data: intervieweeData, error: intervieweeError } = await supabase
+        .from('interviewees')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (intervieweeError) {
+        throw new Error('Failed to find interviewee data');
+      }
+
+      const intervieweeId = intervieweeData.id;
+
+      // Fetch data for this interviewee
+      const [
+        { data: upcomingInterviews, error: upcomingError },
+        { data: completedInterviews, error: completedError },
+        { data: mockInterviews, error: mockError }
+      ] = await Promise.all([
+        supabase.from('interviews')
+          .select('*')
+          .eq('interviewee_id', intervieweeId)
+          .eq('status', 'scheduled')
+          .gt('date_time', new Date().toISOString()),
+        supabase.from('interviews')
+          .select('*')
+          .eq('interviewee_id', intervieweeId)
+          .eq('status', 'completed'),
+        supabase.from('mock_interviews')
+          .select('*')
+          .eq('interviewee_id', intervieweeId)
+      ]);
+
+      if (upcomingError || completedError || mockError) {
+        throw new Error('Failed to load interviewee dashboard data');
+      }
+
+      return {
+        counts: {
+          interviews: (upcomingInterviews?.length || 0) + (completedInterviews?.length || 0),
+          upcomingInterviews: upcomingInterviews?.length || 0,
+          completedInterviews: completedInterviews?.length || 0,
+          scheduledMocks: mockInterviews?.length || 0
+        }
+      };
+    } catch (error) {
+      console.error('Error in getIntervieweeDashboardData:', error);
+      throw error;
+    }
+  }
+};

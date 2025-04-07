@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { 
   Sidebar, 
   SidebarContent,
@@ -32,15 +33,22 @@ import {
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out. Please try again.');
+    }
   };
 
+  
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
       <Sidebar className="hidden lg:flex border-r border-gray-200 dark:border-gray-800">
@@ -50,6 +58,21 @@ const Dashboard: React.FC = () => {
               Hirevantage
             </h2>
           </div>
+          
+          {/* User info display */}
+          {user && (
+            <div className="px-7 py-2">
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium text-purple-700 dark:text-purple-400">
+                    {user.name}
+                  </span>
+                  <p className="text-xs mt-1 capitalize">{user.role} Dashboard</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="flex-1 py-4">
             <nav className="space-y-1 px-4">
               <Link
@@ -161,6 +184,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </Sidebar>
+      
+      
       <div className="flex-1 flex flex-col">
         <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b shrink-0 bg-white dark:bg-gray-950 sm:px-6 shadow-sm">
           <div className="flex items-center gap-4 lg:hidden">
@@ -292,17 +317,28 @@ const Dashboard: React.FC = () => {
               <span className="font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Hirevantage</span>
             </Link>
           </div>
-          {/* Remove top navigation bar and keep just the profile */}
+          
           <div className="flex-1"></div>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout} 
+              className="text-gray-500 hover:text-red-500"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+            
             <Link to="/dashboard/admin/settings" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-medium">
-                AJ
+                {user?.name?.charAt(0) || 'U'}
               </div>
-              <span className="text-sm font-medium hidden sm:inline">Alex Johnson</span>
+              <span className="text-sm font-medium hidden sm:inline">{user?.name || 'User'}</span>
             </Link>
           </div>
         </header>
+        
         <main className="flex-1 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900">
           <Outlet />
         </main>
