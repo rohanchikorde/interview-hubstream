@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
 // Define types for our context
 type Role = 'admin' | 'organization' | 'interviewer' | 'interviewee' | 'guest';
@@ -13,7 +14,7 @@ interface AuthUser {
   email: string;
   name: string;
   role: Role;
-  company?: string;
+  company?: string; // Add the company property as optional
 }
 
 interface AuthContextType {
@@ -117,8 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.id,
           email: data.email,
           name: data.name,
-          role: data.role as Role,
-          company: data.company
+          role: data.role as Role
+          // Remove the company property here since it's not in the users table
         });
 
         // Redirect to the appropriate dashboard based on the role
@@ -193,19 +194,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (authData.user) {
+        // Ensure the role is one of the valid enum values
+        const validRole = (userData.role === 'admin' || 
+                           userData.role === 'organization' || 
+                           userData.role === 'interviewer' || 
+                           userData.role === 'interviewee') 
+                           ? userData.role as Database["public"]["Enums"]["user_role"] 
+                           : 'organization';
+
         // Insert user data into the users table
         const { error: userError } = await supabase
           .from('users')
-          .insert([
-            {
-              id: authData.user.id,
-              email: userData.email,
-              name: userData.name,
-              role: userData.role,
-              company: userData.company || null,
-              password_hash: 'managed_by_auth' // We don't store the password hash, it's managed by Supabase Auth
-            }
-          ]);
+          .insert({
+            id: authData.user.id,
+            email: userData.email,
+            name: userData.name,
+            role: validRole,
+            password_hash: 'managed_by_auth' // We don't store the password hash, it's managed by Supabase Auth
+          });
 
         if (userError) {
           toast.error('Error creating user profile');
@@ -217,15 +223,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Create related record based on role
-        if (userData.role === 'admin') {
+        if (validRole === 'admin') {
           await supabase.from('admins').insert([{ user_id: authData.user.id }]);
-        } else if (userData.role === 'organization') {
+        } else if (validRole === 'organization') {
           await supabase.from('organizations').insert([
             { user_id: authData.user.id, name: userData.company || 'Default Organization' }
           ]);
-        } else if (userData.role === 'interviewer') {
+        } else if (validRole === 'interviewer') {
           await supabase.from('interviewers').insert([{ user_id: authData.user.id }]);
-        } else if (userData.role === 'interviewee') {
+        } else if (validRole === 'interviewee') {
           await supabase.from('interviewees').insert([{ user_id: authData.user.id }]);
         }
 
