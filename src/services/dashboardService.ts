@@ -11,6 +11,7 @@ interface DashboardSummary {
     upcomingInterviews: number;
     completedInterviews: number;
     canceledInterviews?: number;
+    scheduledMocks?: number; // Add this missing property for interviewee dashboard
   };
   recentActivity?: any[];
 }
@@ -151,7 +152,7 @@ export const dashboardService = {
         supabase.from('interviews')
           .select('*')
           .eq('interviewer_id', interviewerId)
-          .eq('status', 'canceled')
+          .eq('status', 'cancelled') // Fixed: changed from 'canceled' to 'cancelled'
       ]);
 
       if (upcomingError || completedError || canceledError) {
@@ -219,7 +220,7 @@ export const dashboardService = {
           interviews: (upcomingInterviews?.length || 0) + (completedInterviews?.length || 0),
           upcomingInterviews: upcomingInterviews?.length || 0,
           completedInterviews: completedInterviews?.length || 0,
-          scheduledMocks: mockInterviews?.length || 0
+          scheduledMocks: mockInterviews?.length || 0 // This property is now properly defined in the interface
         }
       };
     } catch (error) {
