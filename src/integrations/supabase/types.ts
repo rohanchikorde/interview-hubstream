@@ -76,6 +76,45 @@ export type Database = {
           },
         ]
       }
+      candidates: {
+        Row: {
+          created_at: string
+          email: string
+          experience_years: number | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          resume_url: string | null
+          skills: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          experience_years?: number | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          resume_url?: string | null
+          skills?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          experience_years?: number | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          resume_url?: string | null
+          skills?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       demo_requests: {
         Row: {
           company_name: string | null
@@ -277,6 +316,64 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews_schedule: {
+        Row: {
+          candidate_id: string | null
+          created_at: string
+          feedback: Json | null
+          id: string
+          interviewer_id: string | null
+          requirement_id: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id?: string | null
+          created_at?: string
+          feedback?: Json | null
+          id?: string
+          interviewer_id?: string | null
+          requirement_id?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string | null
+          created_at?: string
+          feedback?: Json | null
+          id?: string
+          interviewer_id?: string | null
+          requirement_id?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_schedule_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_schedule_interviewer_id_fkey"
+            columns: ["interviewer_id"]
+            isOneToOne: false
+            referencedRelation: "interviewers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_schedule_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "requirements"
             referencedColumns: ["id"]
           },
         ]
