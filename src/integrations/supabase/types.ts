@@ -398,6 +398,59 @@ export type Database = {
           },
         ]
       }
+      requirements: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          number_of_positions: number
+          price_per_interview: number
+          raised_by: string | null
+          skills: string[]
+          status: string
+          title: string
+          updated_at: string
+          years_of_experience: number
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          number_of_positions?: number
+          price_per_interview?: number
+          raised_by?: string | null
+          skills?: string[]
+          status?: string
+          title: string
+          updated_at?: string
+          years_of_experience?: number
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          number_of_positions?: number
+          price_per_interview?: number
+          raised_by?: string | null
+          skills?: string[]
+          status?: string
+          title?: string
+          updated_at?: string
+          years_of_experience?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
