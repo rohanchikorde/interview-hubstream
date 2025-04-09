@@ -1,14 +1,36 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
+// Define a type for valid table names based on the database schema
+type TableName = 
+  | "analytics"
+  | "companies" 
+  | "jobs" 
+  | "applications" 
+  | "candidates" 
+  | "audit_logs" 
+  | "users" 
+  | "candidate_lists" 
+  | "client_payments" 
+  | "company_team" 
+  | "interview_evaluations" 
+  | "interviewer_performance" 
+  | "interviewers" 
+  | "interviews" 
+  | "leads" 
+  | "payments" 
+  | "quality_reviews" 
+  | "requirements_documents" 
+  | "support_tickets";
+
 /**
  * Helper function to safely query supabase tables with better error handling
- * Uses a type assertion to allow dynamic table names, but with runtime validation
+ * Uses a type-safe approach to ensure table names are valid
  * @param tableName The name of the table to query
  * @returns A query builder for the specified table
  */
-export const supabaseTable = <T = any>(tableName: string) => {
-  // Use a type assertion with runtime validation for the table name
+export const supabaseTable = <T = any>(tableName: TableName) => {
   return supabase.from(tableName) as any;
 };
 
