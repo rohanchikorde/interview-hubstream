@@ -96,31 +96,49 @@ export const sessionService = {
           break;
           
         case 'interviewer':
-          // Query by work_email instead of numeric user_id to avoid type mismatch
-          const { data: interviewerData, error: interviewerError } = await supabase
-            .from('interviewers')
-            // First get the user by email to find the matching record
-            .select('interviewers.*, users.work_email')
-            .join('users', 'users.user_id = interviewers.user_id')
-            .eq('users.work_email', userId)
+          // First, get the user to find their user_id
+          const { data: interviewerUser, error: interviewerUserError } = await supabase
+            .from('users')
+            .select('user_id')
+            .eq('work_email', userId)
             .single();
+            
+          if (interviewerUserError) throw interviewerUserError;
           
-          if (interviewerError) throw interviewerError;
-          data = interviewerData;
+          // Then use the user_id to get the interviewer record
+          if (interviewerUser?.user_id) {
+            const { data: interviewerData, error: interviewerError } = await supabase
+              .from('interviewers')
+              .select('*')
+              .eq('user_id', interviewerUser.user_id)
+              .single();
+            
+            if (interviewerError) throw interviewerError;
+            data = { ...interviewerData, work_email: userId };
+          }
           break;
           
         case 'interviewee':
-          // Query by email instead of numeric user_id to avoid type mismatch
-          const { data: intervieweeData, error: intervieweeError } = await supabase
-            .from('candidates')
-            // First get the user by email to find the matching record
-            .select('candidates.*, users.work_email')
-            .join('users', 'users.user_id = candidates.user_id')
-            .eq('users.work_email', userId)
+          // First, get the user to find their user_id
+          const { data: intervieweeUser, error: intervieweeUserError } = await supabase
+            .from('users')
+            .select('user_id')
+            .eq('work_email', userId)
             .single();
+            
+          if (intervieweeUserError) throw intervieweeUserError;
           
-          if (intervieweeError) throw intervieweeError;
-          data = intervieweeData;
+          // Then use the user_id to get the candidate record
+          if (intervieweeUser?.user_id) {
+            const { data: intervieweeData, error: intervieweeError } = await supabase
+              .from('candidates')
+              .select('*')
+              .eq('user_id', intervieweeUser.user_id)
+              .single();
+            
+            if (intervieweeError) throw intervieweeError;
+            data = { ...intervieweeData, work_email: userId };
+          }
           break;
           
         default:
