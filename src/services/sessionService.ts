@@ -125,6 +125,8 @@ export const sessionService = {
                 if (!fallbackError) {
                   data = { ...fallbackData, work_email: userId };
                   // Update the interviewer with the auth_user_id for next time
+                  // Instead of directly including auth_user_id in the object,
+                  // we'll update it in the database but not include it in the returned data
                   await supabase
                     .from('interviewers')
                     .update({ auth_user_id: authUserId })
@@ -164,6 +166,8 @@ export const sessionService = {
                 if (!fallbackError) {
                   data = { ...fallbackData, work_email: userId };
                   // Update the candidate with the auth_user_id for next time
+                  // Instead of directly including auth_user_id in the object,
+                  // we'll update it in the database but not include it in the returned data
                   await supabase
                     .from('candidates')
                     .update({ auth_user_id: authUserId })
