@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
@@ -18,7 +17,7 @@ import {
   TableCell 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { 
   mockCompanies, 
   mockInterviewers, 
@@ -75,9 +74,9 @@ const CompanyDetailPage: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <DateRangePicker 
-            dateRange={dateRange} 
-            setDateRange={setDateRange} 
+          <DatePickerWithRange 
+            date={dateRange} 
+            setDate={setDateRange} 
           />
           <Button variant="outline" className="flex items-center gap-2">
             <Download className="h-4 w-4" /> Export Report

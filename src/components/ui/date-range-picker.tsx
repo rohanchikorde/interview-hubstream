@@ -21,6 +21,7 @@ interface DatePickerWithRangeProps {
   className?: string;
 }
 
+// Export both component names for backward compatibility
 export function DatePickerWithRange({
   date,
   setDate,
@@ -67,3 +68,6 @@ export function DatePickerWithRange({
     </div>
   );
 }
+
+// Export the component with the name that's expected in CompanyDetailPage
+export const DateRangePicker = DatePickerWithRange;

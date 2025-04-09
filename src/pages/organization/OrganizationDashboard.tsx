@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { dashboardService, Organization } from '@/services/dashboardService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +40,7 @@ import { supabaseTable, handleMultipleResponse } from '@/utils/supabaseHelpers';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { organizationMockData } from '@/data/organizationMockData';
+import { DateRange } from 'react-day-picker';
 
 const COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -66,7 +66,8 @@ const OrganizationDashboard: React.FC = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
-  const [dateRange, setDateRange] = useState({
+  // Fixed the DateRange type to make 'to' optional, matching the DateRange type from react-day-picker
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: addDays(new Date(), -30),
     to: new Date(),
   });
@@ -307,7 +308,7 @@ const OrganizationDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Interview Performance</CardTitle>
-                <CardDescription>Average ratings over time</CardDescription>
+                <CardDescription>Average ratings over time</CardHeader>
               </CardHeader>
               <CardContent>
                 <div className="h-64">
