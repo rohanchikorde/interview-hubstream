@@ -9,21 +9,19 @@ import {
   InterviewStatus,
   InterviewFeedback
 } from "@/types/interview";
-import { Json } from "@/integrations/supabase/types";
 
 // Helper function to convert Json to InterviewFeedback if needed
-const convertFeedback = (feedback: Json | null): InterviewFeedback | null => {
+const convertFeedback = (feedback: any | null): InterviewFeedback | null => {
   if (!feedback) return null;
   
   // If it's already the right shape, return it
   if (typeof feedback === 'object' && feedback !== null && 'rating' in feedback && 'comments' in feedback) {
-    const typedFeedback = feedback as unknown as InterviewFeedback;
     return {
-      rating: Number(typedFeedback.rating),
-      comments: String(typedFeedback.comments),
-      strengths: Array.isArray(typedFeedback.strengths) ? typedFeedback.strengths.map(String) : undefined,
-      weaknesses: Array.isArray(typedFeedback.weaknesses) ? typedFeedback.weaknesses.map(String) : undefined,
-      recommendation: typedFeedback.recommendation ? String(typedFeedback.recommendation) : undefined
+      rating: Number(feedback.rating),
+      comments: String(feedback.comments),
+      strengths: Array.isArray(feedback.strengths) ? feedback.strengths.map(String) : undefined,
+      weaknesses: Array.isArray(feedback.weaknesses) ? feedback.weaknesses.map(String) : undefined,
+      recommendation: feedback.recommendation ? String(feedback.recommendation) : undefined
     };
   }
   
@@ -86,7 +84,7 @@ export const interviewService = {
       }
 
       // Transform data to match InterviewWithDetails interface using type assertion
-      const interviews = castResult<any[]>(data).map(item => {
+      const interviews = (data || []).map((item: any) => {
         return {
           id: item.id,
           candidate_id: item.candidate_id,
@@ -134,7 +132,7 @@ export const interviewService = {
       }
 
       // Transform data to match InterviewWithDetails interface using type assertion
-      const item = castResult<any>(data);
+      const item = data as any;
       return {
         id: item.id,
         candidate_id: item.candidate_id,
@@ -186,8 +184,8 @@ export const interviewService = {
     try {
       const { data, error } = await supabaseTable('interviews_schedule')
         .update({
-          feedback: request.feedback as unknown as Json,
-          status: 'completed' as InterviewStatus // Automatically update status to Completed when feedback is added
+          feedback: request.feedback,
+          status: 'completed' as InterviewStatus
         })
         .eq('id', interviewId)
         .select()

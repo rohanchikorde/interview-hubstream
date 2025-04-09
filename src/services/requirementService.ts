@@ -46,7 +46,7 @@ export const requirementService = {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      return castResult<Requirement[]>(data);
+      return castResult<Requirement[]>(data || []);
     } catch (error: any) {
       toast.error(`Failed to fetch requirements: ${error.message}`);
       return [];
@@ -71,7 +71,7 @@ export const requirementService = {
   async updateRequirement(id: string, updates: UpdateRequirementRequest): Promise<Requirement | null> {
     try {
       const { data, error } = await supabaseTable('requirements')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();
@@ -87,7 +87,7 @@ export const requirementService = {
   async closeRequirement(id: string, status: 'Fulfilled' | 'Canceled'): Promise<boolean> {
     try {
       const { error } = await supabaseTable('requirements')
-        .update({ status })
+        .update({ status } as any)
         .eq('id', id);
 
       if (error) throw error;

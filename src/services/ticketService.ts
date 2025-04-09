@@ -31,7 +31,7 @@ export const ticketService = {
       }
 
       // Transform data to match TicketWithDetails interface
-      const tickets = castResult<any[]>(data).map(item => ({
+      const tickets = (data || []).map((item: any) => ({
         id: item.id,
         requirement_id: item.requirement_id,
         status: item.status,
@@ -106,7 +106,8 @@ export const ticketService = {
         .insert({
           requirement_id: request.requirement_id,
           company_id: request.company_id,
-          raised_by: user.user.id
+          raised_by: user.user.id,
+          status: 'Pending' as TicketStatus // Set default status
         })
         .select()
         .single();
@@ -130,7 +131,7 @@ export const ticketService = {
       const { data, error } = await supabaseTable('tickets')
         .update({
           status: request.status
-        })
+        } as any)
         .eq('id', ticketId)
         .select()
         .single();
@@ -153,7 +154,7 @@ export const ticketService = {
     try {
       const { data, error } = await supabaseTable('tickets')
         .update({
-          status: 'Escalated'
+          status: 'Escalated' as any
           // In a real application, we would store the reason in a separate table
           // For simplicity, we're not implementing that here
         })

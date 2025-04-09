@@ -39,7 +39,7 @@ export const candidateService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return castResult<Candidate[]>(data);
+      return castResult<Candidate[]>(data || []);
     } catch (error: any) {
       toast.error(`Failed to fetch candidates: ${error.message}`);
       return [];
@@ -86,14 +86,16 @@ export const candidateService = {
 
   async bulkCreateCandidates(candidates: CreateCandidateRequest[]): Promise<number> {
     try {
+      const formattedCandidates = candidates.map(c => ({
+        full_name: c.full_name,
+        email: c.email,
+        resume_url: c.resume_url,
+        requirement_id: c.requirement_id,
+        status: 'New' as CandidateStatus
+      }));
+      
       const { data, error } = await supabaseTable('candidates')
-        .insert(candidates.map(c => ({
-          full_name: c.full_name,
-          email: c.email,
-          resume_url: c.resume_url,
-          requirement_id: c.requirement_id,
-          status: 'New' as CandidateStatus
-        })))
+        .insert(formattedCandidates)
         .select();
 
       if (error) throw error;

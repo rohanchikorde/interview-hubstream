@@ -14,7 +14,7 @@ interface AuthUser {
   email: string;
   name: string;
   role: Role;
-  company?: string; // Add the company property as optional
+  company?: string;
 }
 
 interface AuthContextType {
@@ -112,23 +112,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error fetching user data:', error);
         setUser(null);
       } else if (data) {
-        // Get the user's role from the roles column (which is a JSONB type in the database)
-        const userRoles = data.roles as string[];
-        const primaryRole = userRoles && userRoles.length > 0 
-          ? userRoles[0] as Role 
-          : 'guest';
+        // Get the user's role from the roles field
+        let userRole: Role = 'guest';
+        
+        if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
+          userRole = data.roles[0] as Role;
+        }
 
         // Set the authenticated user with role information
         setUser({
           id: data.id,
           email: data.work_email,
           name: data.full_name,
-          role: primaryRole
-          // company property would be added here if needed
+          role: userRole
         });
 
         // Redirect to the appropriate dashboard based on the role
-        redirectBasedOnRole(primaryRole);
+        redirectBasedOnRole(userRole);
       }
     } catch (error) {
       console.error('Exception fetching user data:', error);

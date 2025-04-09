@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -41,7 +42,7 @@ interface OrganizationData {
   name: string;
   stats: any;
   user_id: string;
-  notifications?: Notification[];
+  notifications: Notification[];
   unreadNotificationsCount: number;
 }
 
@@ -80,10 +81,18 @@ const OrganizationDashboard: React.FC = () => {
         
         // Set the organization data with notifications
         if (orgData) {
+          const typedNotifications: Notification[] = Array.isArray(notifData) 
+            ? notifData.map((n: any) => ({
+                id: n.id || '',
+                message: n.message || '',
+                status: n.status || 'read'
+              }))
+            : [];
+            
           setOrganizationData({
             ...orgData,
-            notifications: notifData || [],
-            unreadNotificationsCount: notifData ? notifData.filter(n => n.status === 'unread').length : 0
+            notifications: typedNotifications,
+            unreadNotificationsCount: typedNotifications.filter(n => n.status === 'unread').length
           });
         }
       } catch (error) {
@@ -105,10 +114,15 @@ const OrganizationDashboard: React.FC = () => {
           setOrganizationData(prevData => {
             if (!prevData) return prevData;
             
-            const newNotification = payload.new as any;
+            const newNotification = {
+              id: (payload.new as any).id || '',
+              message: (payload.new as any).message || '',
+              status: (payload.new as any).status || 'unread'
+            };
+            
             return {
               ...prevData,
-              notifications: [...(prevData.notifications || []), newNotification],
+              notifications: [...prevData.notifications, newNotification],
               unreadNotificationsCount: prevData.unreadNotificationsCount + 1
             };
           });
