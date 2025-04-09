@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 
 import {
   Form,
@@ -48,13 +48,20 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register, signIn, signUp } = useAuth();
+  const { login, register, isAuthenticated, getUserRole, getDashboardPath } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get the redirect path from location state if available
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || getDashboardPath();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(getDashboardPath(), { replace: true });
+    }
+  }, [isAuthenticated, navigate, getDashboardPath]);
 
   // Initialize the form with the appropriate schema
   const form = useForm<LoginFormValues | RegisterFormValues>({

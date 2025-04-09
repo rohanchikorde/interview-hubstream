@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster.tsx'; 
@@ -111,6 +110,7 @@ function App() {
             </div>
           )}
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -121,7 +121,7 @@ function App() {
             
             {/* Admin Dashboard - Protected for admin role */}
             <Route path="/dashboard" element={
-              <ProtectedRoute requiredRoles={['admin']}>
+              <ProtectedRoute requiredRole="admin">
                 <Dashboard />
               </ProtectedRoute>
             }>
@@ -157,7 +157,7 @@ function App() {
             
             {/* Organization Client Dashboard Routes */}
             <Route path="/organization" element={
-              <ProtectedRoute requiredRoles={['organization']}>
+              <ProtectedRoute requiredRole="organization">
                 <OrganizationDashboard />
               </ProtectedRoute>
             }>
@@ -172,7 +172,7 @@ function App() {
             
             {/* Interviewer Dashboard Routes */}
             <Route path="/interviewer" element={
-              <ProtectedRoute requiredRoles={['interviewer']}>
+              <ProtectedRoute requiredRole="interviewer">
                 <InterviewerDashboard />
               </ProtectedRoute>
             }>
@@ -187,7 +187,7 @@ function App() {
             
             {/* Interviewee Dashboard Routes */}
             <Route path="/interviewee" element={
-              <ProtectedRoute requiredRoles={['interviewee']}>
+              <ProtectedRoute requiredRole="interviewee">
                 <IntervieweeDashboard />
               </ProtectedRoute>
             }>
@@ -199,6 +199,7 @@ function App() {
               <Route path="profile" element={<IntervieweeProfile />} />
             </Route>
             
+            {/* Catch-all route for not found pages */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </SidebarProvider>

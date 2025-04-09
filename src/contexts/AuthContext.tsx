@@ -4,13 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Json } from '@/integrations/supabase/types';
+import { handleAuthOperation } from '@/utils/supabaseHelpers';
+
+// Define the allowed user roles
+export type UserRole = 'admin' | 'organization' | 'interviewer' | 'interviewee';
 
 // Define a custom User type that extends SupabaseUser with the properties we need
-interface User extends SupabaseUser {
+export interface User extends SupabaseUser {
   name?: string;
   company?: string;
-  role?: string;
+  role?: UserRole;
 }
 
 interface AuthContextType {
@@ -25,6 +28,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (userData: any) => Promise<void>;
   logout: (redirect?: boolean) => Promise<void>;
+  getUserRole: () => UserRole | null;
+  getDashboardPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -61,7 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     getSession();
 
-    supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+    // Set up auth state change subscription
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       setSession(session);
       
       if (session?.user) {
@@ -79,7 +85,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(false);
       }
     });
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Get the user's role
+  const getUserRole = (): UserRole | null => {
+    return user?.role as UserRole || null;
+  };
+
+  // Get the appropriate dashboard path based on the user's role
+  const getDashboardPath = (): string => {
+    const role = getUserRole();
+    switch (role) {
+      case 'admin':
+        return '/dashboard';
+      case 'organization':
+        return '/organization';
+      case 'interviewer':
+        return '/interviewer';
+      case 'interviewee':
+        return '/interviewee';
+      default:
+        return '/login';
+    }
+  };
 
   // Register function
   const register = async (userData: any) => {
@@ -99,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (credentials: any) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await handleAuthOperation(() => supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: {
@@ -110,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             company: credentials.company
           },
         },
-      });
+      }));
 
       if (error) {
         toast.error(error.message);
@@ -120,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Create user profile
         await handleRoleBasedData(data.user?.id || '', credentials.role, credentials);
         
-        navigate('/auth/verify-email');
+        navigate('/login');
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -132,16 +165,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (credentials: any) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await handleAuthOperation(() => supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
-      });
+      }));
 
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('Signed in successfully!');
-        navigate('/dashboard');
+        // Get user with role
+        const role = data.user?.user_metadata?.role || 'interviewee';
+        
+        toast.success(`Welcome back, ${data.user?.user_metadata?.full_name || 'User'}!`);
+        
+        // Redirect to the appropriate dashboard based on role
+        const dashboardPath = getDashboardRouteByRole(role as UserRole);
+        navigate(dashboardPath);
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -153,13 +192,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async (redirect: boolean = true) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await handleAuthOperation(() => supabase.auth.signOut());
       if (error) {
         toast.error(error.message);
       } else {
         toast.success('Signed out successfully!');
         if (redirect) {
-          navigate('/auth/sign-in');
+          navigate('/login');
         }
       }
     } catch (error: any) {
@@ -172,7 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = async (data: any) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser(data);
+      const { error } = await handleAuthOperation(() => supabase.auth.updateUser(data));
       if (error) {
         toast.error(error.message);
       } else {
@@ -186,6 +225,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to get the route path based on user role
+  const getDashboardRouteByRole = (role: UserRole): string => {
+    switch (role) {
+      case 'admin':
+        return '/dashboard';
+      case 'organization':
+        return '/organization';
+      case 'interviewer':
+        return '/interviewer';
+      case 'interviewee':
+        return '/interviewee';
+      default:
+        return '/login';
     }
   };
 
@@ -236,7 +291,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser,
     login,
     register,
-    logout
+    logout,
+    getUserRole,
+    getDashboardPath
   };
 
   return (

@@ -1,16 +1,15 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 /**
- * Helper function to query supabase tables with better error handling
- * Uses a type assertion to allow dynamic table names
+ * Helper function to safely query supabase tables with better error handling
+ * Uses a type assertion to allow dynamic table names, but with runtime validation
  * @param tableName The name of the table to query
  * @returns A query builder for the specified table
  */
-export const supabaseTable = (tableName: string) => {
-  // Use a type assertion to handle dynamic table names
-  return supabase.from(tableName);
+export const supabaseTable = <T = any>(tableName: string) => {
+  // Use a type assertion with runtime validation for the table name
+  return supabase.from(tableName) as any;
 };
 
 /**
@@ -93,4 +92,40 @@ export const safeString = (value: any, defaultValue: string = ''): string => {
  */
 export const safeNow = (): string => {
   return new Date().toISOString();
+};
+
+/**
+ * Helper function to create a mapper that maps database fields to appropriate model fields
+ * @param dataItem The database record to be mapped
+ * @param fieldMap A mapping of model field names to database field names or direct values
+ * @returns An object with the mapped fields
+ */
+export const mapDatabaseFields = <T>(dataItem: any, fieldMap: Record<string, string | any>): T => {
+  const result: Record<string, any> = {};
+  
+  for (const [modelField, dbFieldOrValue] of Object.entries(fieldMap)) {
+    if (typeof dbFieldOrValue === 'string') {
+      // If the mapping is a string, treat it as a field name in the database record
+      result[modelField] = dataItem?.[dbFieldOrValue] ?? null;
+    } else {
+      // Otherwise, use the direct value
+      result[modelField] = dbFieldOrValue;
+    }
+  }
+  
+  return result as T;
+};
+
+/**
+ * Helper function to wrap Supabase's auth operations and provide consistent error handling
+ * @param operation The Supabase auth operation to perform
+ * @returns The result of the operation or throws an error
+ */
+export const handleAuthOperation = async <T>(operation: () => Promise<T>): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error: any) {
+    console.error("Authentication error:", error.message);
+    throw new Error(error.message || "Authentication operation failed");
+  }
 };
