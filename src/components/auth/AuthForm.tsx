@@ -36,7 +36,7 @@ const registerSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string().min(6, { message: 'Please confirm your password' }),
-  role: z.enum(['organization', 'interviewer', 'interviewee'], { message: 'Please select a role' })
+  role: z.enum(['admin', 'organization', 'interviewer', 'interviewee'], { message: 'Please select a role' })
 }).refine(data => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: 'Passwords do not match',
@@ -159,6 +159,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-intervue-600/50 focus:border-intervue-600 dark:focus:ring-intervue-500/50 dark:focus:border-intervue-500 transition-all"
                       {...field}
                     >
+                      <option value="admin">Admin</option>
                       <option value="organization">Hiring Manager / Client</option>
                       <option value="interviewer">Interviewer</option>
                       <option value="interviewee">Interviewee</option>
