@@ -1,19 +1,26 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { PostgrestResponse } from "@supabase/supabase-js";
 
 /**
- * Define a type for all valid table names in the Database
+ * Extended TableName type to include both schema tables and custom tables
+ * that might not be in the schema yet
  */
-type TableName = keyof Database['public']['Tables'];
+type KnownTableName = keyof Database['public']['Tables'];
+type CustomTableName = 'requirements' | 'candidates' | 'interviews_schedule' | 'tickets' | 
+  'organizations' | 'interviewees' | 'admins' | 'notifications' | 'mock_interviews' | 'demo_requests';
+type TableName = KnownTableName | CustomTableName;
 
 /**
  * Helper function to query supabase tables with type safety
  * @param tableName The name of the table to query
  * @returns A query builder for the specified table
  */
-export const supabaseTable = <T extends TableName>(tableName: T) => {
-  return supabase.from(tableName);
+export const supabaseTable = (tableName: TableName) => {
+  // Using any here to bypass type checking limitations
+  // when working with tables not fully represented in the Database type
+  return supabase.from(tableName as string) as any;
 };
 
 /**

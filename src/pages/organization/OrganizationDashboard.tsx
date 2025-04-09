@@ -88,12 +88,18 @@ const OrganizationDashboard: React.FC = () => {
                 status: n.status || 'read'
               }))
             : [];
-            
-          setOrganizationData({
-            ...orgData,
+          
+          // Create a properly typed organization data object
+          const typedOrgData: OrganizationData = {
+            id: orgData.id || user.id,
+            name: orgData.name || user.company || 'Organization',
+            stats: orgData.stats || {},
+            user_id: user.id,
             notifications: typedNotifications,
             unreadNotificationsCount: typedNotifications.filter(n => n.status === 'unread').length
-          });
+          };
+            
+          setOrganizationData(typedOrgData);
         }
       } catch (error) {
         console.error('Error in fetchOrganizationData:', error);

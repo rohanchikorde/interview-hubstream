@@ -34,6 +34,15 @@ interface RegisterData {
   company?: string;
 }
 
+// Interface for the user data from the DB
+interface UserData {
+  user_id: string; // Changed to string to match auth.user.id
+  work_email: string;
+  full_name: string;
+  roles: string[];
+  company?: string;
+}
+
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -105,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fetch user data from the users table
       const { data, error } = await supabaseTable('users')
         .select('*')
-        .eq('id', currentSession.user.id)
+        .eq('user_id', currentSession.user.id)
         .single();
 
       if (error) {
@@ -113,17 +122,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
       } else if (data) {
         // Get the user's role from the roles field
+        const userData = data as unknown as UserData;
         let userRole: Role = 'guest';
         
-        if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
-          userRole = data.roles[0] as Role;
+        if (userData.roles && Array.isArray(userData.roles) && userData.roles.length > 0) {
+          userRole = userData.roles[0] as Role;
         }
 
         // Set the authenticated user with role information
         setUser({
-          id: data.id,
-          email: data.work_email,
-          name: data.full_name,
+          id: userData.user_id,
+          email: userData.work_email,
+          name: userData.full_name,
           role: userRole
         });
 
@@ -210,7 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Insert user data into the users table
         const { error: userError } = await supabaseTable('users')
           .insert({
-            id: authData.user.id,
+            user_id: authData.user.id,
             work_email: userData.email,
             full_name: userData.name,
             roles: [validRole],
@@ -229,18 +239,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Create related record based on role
         if (validRole === 'admin') {
           await supabaseTable('admins')
-            .insert([{ user_id: authData.user.id }]);
+            .insert({ user_id: authData.user.id });
         } else if (validRole === 'organization') {
           await supabaseTable('organizations')
-            .insert([
-              { user_id: authData.user.id, name: userData.company || 'Default Organization' }
-            ]);
+            .insert({ 
+              user_id: authData.user.id, 
+              name: userData.company || 'Default Organization' 
+            });
         } else if (validRole === 'interviewer') {
           await supabaseTable('interviewers')
-            .insert([{ user_id: authData.user.id }]);
+            .insert({ user_id: authData.user.id });
         } else if (validRole === 'interviewee') {
           await supabaseTable('interviewees')
-            .insert([{ user_id: authData.user.id }]);
+            .insert({ user_id: authData.user.id });
         }
 
         toast.success('Account created successfully! Please log in.');

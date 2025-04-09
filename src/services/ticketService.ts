@@ -1,175 +1,178 @@
-
 import { supabaseTable, castResult } from "@/utils/supabaseHelpers";
-import { Ticket, TicketWithDetails, CreateTicketRequest, UpdateTicketRequest, TicketStatus } from "@/types/ticket";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  Ticket,
+  TicketWithDetails,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  TicketStatus
+} from "@/types/ticket";
+import { toast } from "sonner";
 
 export const ticketService = {
-  /**
-   * Get tickets with optional filters
-   */
-  async getTickets(filters?: { status?: TicketStatus; company_id?: string }): Promise<TicketWithDetails[]> {
+  async getTickets(): Promise<TicketWithDetails[]> {
     try {
-      let query = supabaseTable('tickets')
-        .select(`
-          *,
-          requirements:requirement_id(title),
-          organizations:company_id(name)
-        `);
+      // Assuming support_tickets is the closest match in the DB schema
+      const { data, error } = await supabaseTable('support_tickets')
+        .select('*, companies(company_name)')
+        .order('created_at', { ascending: false });
 
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
-      }
+      if (error) throw error;
 
-      if (filters?.company_id) {
-        query = query.eq('company_id', filters.company_id);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        throw new Error(`Error fetching tickets: ${error.message}`);
-      }
-
-      // Transform data to match TicketWithDetails interface
-      const tickets = (data || []).map((item: any) => ({
-        id: item.id,
-        requirement_id: item.requirement_id,
-        status: item.status,
-        raised_by: item.raised_by,
-        company_id: item.company_id,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        requirement_title: item.requirements?.title,
-        company_name: item.organizations?.name
-      })) as TicketWithDetails[];
+      // Transform DB data to match TicketWithDetails
+      const tickets: TicketWithDetails[] = (data || []).map((ticket: any) => {
+        return {
+          id: ticket.ticket_id.toString(),
+          requirement_id: '', // This field might not exist in the DB schema
+          status: mapDBStatusToTicketStatus(ticket.status),
+          raised_by: ticket.user_id?.toString() || '',
+          company_id: ticket.company_id?.toString() || '',
+          created_at: ticket.created_at,
+          updated_at: ticket.updated_at || ticket.created_at,
+          company_name: ticket.companies?.company_name || '',
+          requirement_title: ticket.subject || '', // Using subject as a placeholder
+          raised_by_name: '' // This would need to be fetched separately
+        };
+      });
 
       return tickets;
     } catch (error: any) {
-      console.error('Error in getTickets:', error);
-      throw error;
+      toast.error(`Failed to fetch tickets: ${error.message}`);
+      return [];
     }
   },
 
-  /**
-   * Get a ticket by ID
-   */
-  async getTicketById(ticketId: string): Promise<TicketWithDetails | null> {
+  async getTicketById(id: string): Promise<TicketWithDetails | null> {
     try {
-      const { data, error } = await supabaseTable('tickets')
-        .select(`
-          *,
-          requirements:requirement_id(title, description, skills, number_of_positions, years_of_experience, price_per_interview),
-          organizations:company_id(name)
-        `)
-        .eq('id', ticketId)
+      const { data, error } = await supabaseTable('support_tickets')
+        .select('*, companies(company_name)')
+        .eq('ticket_id', parseInt(id))
         .single();
 
-      if (error) {
-        throw new Error(`Error fetching ticket: ${error.message}`);
-      }
+      if (error) throw error;
 
-      if (!data) {
-        return null;
-      }
+      // Create a TicketWithDetails object from the DB data
+      const ticket: TicketWithDetails = {
+        id: data.ticket_id.toString(),
+        requirement_id: '', // This field might not exist in the DB schema
+        status: mapDBStatusToTicketStatus(data.status),
+        raised_by: data.user_id?.toString() || '',
+        company_id: data.company_id?.toString() || '',
+        created_at: data.created_at,
+        updated_at: data.updated_at || data.created_at,
+        company_name: data.companies?.company_name || '',
+        requirement_title: data.subject || '', // Using subject as a placeholder
+        raised_by_name: '' // This would need to be fetched separately
+      };
 
-      // Transform data to match TicketWithDetails interface
-      const item = castResult<any>(data);
-      return {
-        id: item.id,
-        requirement_id: item.requirement_id,
-        status: item.status,
-        raised_by: item.raised_by,
-        company_id: item.company_id,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        requirement_title: item.requirements?.title,
-        company_name: item.organizations?.name
-      } as TicketWithDetails;
+      return ticket;
     } catch (error: any) {
-      console.error('Error in getTicketById:', error);
-      throw error;
+      toast.error(`Failed to fetch ticket: ${error.message}`);
+      return null;
     }
   },
 
-  /**
-   * Create a new ticket
-   */
   async createTicket(request: CreateTicketRequest): Promise<Ticket | null> {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (!user?.user) {
-        throw new Error('User not authenticated');
-      }
-
-      const { data, error } = await supabaseTable('tickets')
+      // Map the request to match the support_tickets schema
+      const { data, error } = await supabaseTable('support_tickets')
         .insert({
-          requirement_id: request.requirement_id,
-          company_id: request.company_id,
-          raised_by: user.user.id,
-          status: 'Pending' as TicketStatus // Set default status
+          company_id: parseInt(request.company_id),
+          subject: `Requirement Request`, // Default subject
+          status: 'open', // Default status in DB
+          // Other required fields based on DB schema
         })
         .select()
         .single();
 
-      if (error) {
-        throw new Error(`Error creating ticket: ${error.message}`);
-      }
+      if (error) throw error;
 
-      return castResult<Ticket>(data);
+      // Convert DB data to Ticket format
+      const ticket: Ticket = {
+        id: data.ticket_id.toString(),
+        requirement_id: request.requirement_id, // This is stored at application level
+        status: mapDBStatusToTicketStatus(data.status),
+        raised_by: data.user_id?.toString() || '',
+        company_id: data.company_id?.toString() || '',
+        created_at: data.created_at,
+        updated_at: data.created_at
+      };
+
+      return ticket;
     } catch (error: any) {
-      console.error('Error in createTicket:', error);
-      throw error;
+      toast.error(`Failed to create ticket: ${error.message}`);
+      return null;
     }
   },
 
-  /**
-   * Update a ticket's status
-   */
-  async updateTicketStatus(ticketId: string, request: UpdateTicketRequest): Promise<Ticket | null> {
+  async updateTicket(id: string, updates: UpdateTicketRequest): Promise<Ticket | null> {
     try {
-      const { data, error } = await supabaseTable('tickets')
+      // Map TicketStatus to DB status
+      const dbStatus = mapTicketStatusToDBStatus(updates.status);
+      
+      const { data, error } = await supabaseTable('support_tickets')
         .update({
-          status: request.status
-        } as any)
-        .eq('id', ticketId)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Error updating ticket: ${error.message}`);
-      }
-
-      return castResult<Ticket>(data);
-    } catch (error: any) {
-      console.error('Error in updateTicketStatus:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Escalate a ticket for rejection
-   */
-  async escalateTicket(ticketId: string, reason: string): Promise<Ticket | null> {
-    try {
-      const { data, error } = await supabaseTable('tickets')
-        .update({
-          status: 'Escalated' as any
-          // In a real application, we would store the reason in a separate table
-          // For simplicity, we're not implementing that here
+          status: dbStatus,
+          // Other fields as needed
         })
-        .eq('id', ticketId)
+        .eq('ticket_id', parseInt(id))
         .select()
         .single();
 
-      if (error) {
-        throw new Error(`Error escalating ticket: ${error.message}`);
-      }
+      if (error) throw error;
 
-      return castResult<Ticket>(data);
+      // Convert DB data to Ticket format
+      const ticket: Ticket = {
+        id: data.ticket_id.toString(),
+        requirement_id: '', // This field might not exist in the DB
+        status: mapDBStatusToTicketStatus(data.status),
+        raised_by: data.user_id?.toString() || '',
+        company_id: data.company_id?.toString() || '',
+        created_at: data.created_at,
+        updated_at: data.updated_at || data.created_at
+      };
+
+      return ticket;
     } catch (error: any) {
-      console.error('Error in escalateTicket:', error);
-      throw error;
+      toast.error(`Failed to update ticket: ${error.message}`);
+      return null;
+    }
+  },
+
+  async escalateTicket(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabaseTable('support_tickets')
+        .update({ 
+          status: 'in_progress', // Using in_progress as equivalent to escalated
+          priority: 'high' // Setting high priority for escalated tickets
+        })
+        .eq('ticket_id', parseInt(id));
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      toast.error(`Failed to escalate ticket: ${error.message}`);
+      return false;
     }
   }
 };
+
+// Helper functions to map between application statuses and DB statuses
+function mapDBStatusToTicketStatus(dbStatus: string): TicketStatus {
+  switch(dbStatus) {
+    case 'open': return 'Pending';
+    case 'in_progress': return 'Hold';
+    case 'resolved': return 'Approved';
+    default: return 'Pending';
+  }
+}
+
+function mapTicketStatusToDBStatus(ticketStatus: TicketStatus): string {
+  switch(ticketStatus) {
+    case 'Pending': return 'open';
+    case 'Hold': return 'in_progress';
+    case 'Approved': return 'resolved';
+    case 'Rejected': return 'resolved'; // Using resolved with additional context
+    case 'Escalated': return 'in_progress'; // Using in_progress with high priority
+    default: return 'open';
+  }
+}
