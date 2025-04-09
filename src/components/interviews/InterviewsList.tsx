@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -34,6 +35,33 @@ const statusColors: Record<InterviewStatus, string> = {
   'Rescheduled': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
 };
 
+// Helper function to map database status to UI status
+const mapStatusToUi = (dbStatus: string): InterviewStatus => {
+  const statusMap: Record<string, InterviewStatus> = {
+    'scheduled': 'Scheduled',
+    'completed': 'Completed',
+    'rescheduled': 'Rescheduled',
+    'tech_issue': 'Canceled',
+    'no_show': 'Canceled',
+    'on_hold': 'In Progress'
+  };
+  return statusMap[dbStatus] || 'Scheduled';
+};
+
+// Helper function to map UI status to database status
+const mapUiToDbStatus = (uiStatus: InterviewStatus | 'all'): string | null => {
+  if (uiStatus === 'all') return null;
+  
+  const statusMap: Record<InterviewStatus, string> = {
+    'Scheduled': 'scheduled',
+    'In Progress': 'on_hold',
+    'Completed': 'completed',
+    'Canceled': 'no_show',
+    'Rescheduled': 'rescheduled'
+  };
+  return statusMap[uiStatus] || 'scheduled';
+};
+
 const InterviewsList: React.FC = () => {
   const [interviews, setInterviews] = useState<InterviewWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +73,12 @@ const InterviewsList: React.FC = () => {
     setLoading(true);
     try {
       const data = await interviewService.getInterviews();
-      setInterviews(data);
+      // Map database status to UI status
+      const mappedData = data.map(interview => ({
+        ...interview,
+        status: mapStatusToUi(interview.status.toLowerCase())
+      }));
+      setInterviews(mappedData);
     } catch (error) {
       console.error('Error fetching interviews:', error);
       toast.error('Failed to load interviews');
