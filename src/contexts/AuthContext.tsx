@@ -327,9 +327,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Create candidate in the candidates table
           await supabase.from("candidates").insert({
             // We omit user_id and candidate_id
-            name: userData.name,
+            // Fix the source value to use a valid enum value and rename 'name' to match the field name in DB
             email: userData.email,
-            source: 'self_signup'
+            name: userData.name, // Using 'name' field which exists in the candidates table
+            source: 'client_upload' // Using a valid enum value from "client_upload" | "internal"
           });
           
           // Also create entry in users table

@@ -96,11 +96,13 @@ export const sessionService = {
           break;
           
         case 'interviewer':
-          // Convert UUID string to a valid format or query by different field
+          // Query by work_email instead of numeric user_id to avoid type mismatch
           const { data: interviewerData, error: interviewerError } = await supabase
             .from('interviewers')
-            .select('*')
-            .eq('user_id', userId)
+            // First get the user by email to find the matching record
+            .select('interviewers.*, users.work_email')
+            .join('users', 'users.user_id = interviewers.user_id')
+            .eq('users.work_email', userId)
             .single();
           
           if (interviewerError) throw interviewerError;
@@ -108,11 +110,13 @@ export const sessionService = {
           break;
           
         case 'interviewee':
-          // Convert UUID string to a valid format or query by different field
+          // Query by email instead of numeric user_id to avoid type mismatch
           const { data: intervieweeData, error: intervieweeError } = await supabase
             .from('candidates')
-            .select('*')
-            .eq('user_id', userId)
+            // First get the user by email to find the matching record
+            .select('candidates.*, users.work_email')
+            .join('users', 'users.user_id = candidates.user_id')
+            .eq('users.work_email', userId)
             .single();
           
           if (intervieweeError) throw intervieweeError;
