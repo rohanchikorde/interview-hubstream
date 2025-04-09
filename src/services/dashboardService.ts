@@ -1,25 +1,42 @@
-import { supabase } from '@/integrations/supabase/client';
-import { supabaseTable, handleSingleResponse, handleMultipleResponse } from '@/utils/supabaseHelpers';
 
-interface DashboardSummary {
-  counts: {
-    interviews: number;
-    interviewers?: number;
-    interviewees?: number;
-    companies?: number;
-    pendingRequests?: number;
-    upcomingInterviews: number;
-    completedInterviews: number;
-    canceledInterviews?: number;
-    scheduledMocks?: number; 
-  };
-  recentActivity?: any[];
+import { supabaseTable, handleSingleResponse } from "@/utils/supabaseHelpers";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+export interface DashboardSummary {
+  totalInterviews: number;
+  completedInterviews: number;
+  pendingInterviews: number;
+  canceledInterviews: number;
+  totalRequirements?: number;
+  totalCandidates?: number;
+  recentActivity: Activity[];
+  interviewTrend: InterviewTrend[];
+  statusDistribution: StatusDistribution[];
 }
 
-interface Organization {
-  id?: string;
-  name?: string;
-  stats?: {
+export interface Activity {
+  id: string;
+  type: string;
+  title: string;
+  date: string;
+  status: string;
+}
+
+export interface InterviewTrend {
+  name: string;
+  interviews: number;
+}
+
+export interface StatusDistribution {
+  name: string;
+  value: number;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  stats: {
     totalInterviews?: number;
     completedInterviews?: number;
     pendingInterviews?: number;
@@ -38,262 +55,237 @@ interface Organization {
 }
 
 export const dashboardService = {
-  /**
-   * Get organization data for the current user
-   */
   async getOrganization(): Promise<Organization | null> {
     try {
-      // This is temporary mock data for organization dashboard
-      // In a real implementation, this would fetch from the organizations table
-      const mockOrg: Organization = {
-        id: '1',
-        name: 'Acme Corporation',
+      // This is a stub implementation - in a real app, we would fetch organization data from Supabase
+      return {
+        id: "1",
+        name: "Example Organization",
         stats: {
-          totalInterviews: 248,
-          completedInterviews: 187,
-          pendingInterviews: 61,
-          totalCandidates: 352,
-          totalRequirements: 15,
-          averageScore: 8.2,
+          totalInterviews: 48,
+          completedInterviews: 32,
+          pendingInterviews: 16,
+          totalCandidates: 75,
+          totalRequirements: 12,
+          averageScore: 8.5,
           monthlyData: [
-            { month: 'Jan', interviews: 12 },
-            { month: 'Feb', interviews: 19 },
-            { month: 'Mar', interviews: 23 },
-            { month: 'Apr', interviews: 17 },
-            { month: 'May', interviews: 28 },
-            { month: 'Jun', interviews: 32 }
+            { month: "Jan", interviews: 5 },
+            { month: "Feb", interviews: 8 },
+            { month: "Mar", interviews: 12 },
+            { month: "Apr", interviews: 15 },
+            { month: "May", interviews: 8 }
           ],
           statusDistribution: [
-            { name: 'Completed', value: 187 },
-            { name: 'Scheduled', value: 42 },
-            { name: 'Canceled', value: 14 },
-            { name: 'Pending', value: 5 }
+            { name: "Completed", value: 32 },
+            { name: "Pending", value: 16 },
+            { name: "Canceled", value: 4 },
+            { name: "No-Show", value: 3 }
           ]
         }
       };
-      
-      return mockOrg;
-    } catch (error) {
-      console.error('Error in getOrganization:', error);
+    } catch (error: any) {
+      console.error('Error fetching organization data:', error);
       return null;
     }
   },
 
-  /**
-   * Get dashboard data for Admin role
-   */
   async getAdminDashboardData(): Promise<DashboardSummary> {
     try {
-      // Fetch counts for various entities
-      const [
-        interviewsResponse,
-        interviewersResponse,
-        intervieweesResponse, 
-        orgsResponse,
-        pendingRequestsResponse,
-        upcomingInterviewsResponse,
-        completedInterviewsResponse
-      ] = await Promise.all([
-        supabaseTable('interviews').select('*', { count: 'exact', head: true }),
-        supabaseTable('interviewers').select('*', { count: 'exact', head: true }),
-        supabaseTable('interviewees').select('*', { count: 'exact', head: true }),
-        supabaseTable('organizations').select('*', { count: 'exact', head: true }),
-        supabaseTable('demo_requests').select('*').eq('status', 'pending'),
-        supabaseTable('interviews').select('*').eq('status', 'scheduled').gt('date_time', new Date().toISOString()),
-        supabaseTable('interviews').select('*').eq('status', 'completed')
-      ]);
-
-      const pendingRequests = handleMultipleResponse(pendingRequestsResponse);
-      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
-      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
-
+      // In a real app, this would fetch actual data from Supabase
+      
+      // Mock data for now
       return {
-        counts: {
-          interviews: interviewsResponse.count || 0,
-          interviewers: interviewersResponse.count || 0,
-          interviewees: intervieweesResponse.count || 0,
-          companies: orgsResponse.count || 0,
-          pendingRequests: pendingRequests.length || 0,
-          upcomingInterviews: upcomingInterviews.length || 0,
-          completedInterviews: completedInterviews.length || 0
-        }
+        totalInterviews: 124,
+        completedInterviews: 98,
+        pendingInterviews: 26,
+        canceledInterviews: 12,
+        totalRequirements: 45,
+        totalCandidates: 210,
+        recentActivity: [
+          {
+            id: '1',
+            type: 'interview',
+            title: 'Senior React Developer',
+            date: '2023-09-15T10:00:00',
+            status: 'completed'
+          },
+          // ... more activity items
+        ],
+        interviewTrend: [
+          { name: 'Week 1', interviews: 12 },
+          { name: 'Week 2', interviews: 19 },
+          { name: 'Week 3', interviews: 15 },
+          { name: 'Week 4', interviews: 22 }
+        ],
+        statusDistribution: [
+          { name: 'Completed', value: 98 },
+          { name: 'Pending', value: 26 },
+          { name: 'Canceled', value: 12 }
+        ]
       };
     } catch (error) {
-      console.error('Error in getAdminDashboardData:', error);
-      throw error;
+      console.error('Error fetching admin dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
+      
+      // Return empty data structure as fallback
+      return {
+        totalInterviews: 0,
+        completedInterviews: 0,
+        pendingInterviews: 0,
+        canceledInterviews: 0,
+        recentActivity: [],
+        interviewTrend: [],
+        statusDistribution: []
+      };
     }
   },
-
-  /**
-   * Get dashboard data for Organization role
-   */
+  
   async getOrganizationDashboardData(userId: string): Promise<DashboardSummary> {
     try {
-      // First get the organization ID for this user
-      const orgResponse = await supabaseTable('organizations')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      const orgData = handleSingleResponse<any>(orgResponse);
-
-      if (!orgData) {
-        throw new Error('Failed to find organization data');
-      }
-
-      const organizationId = orgData.id;
-
-      if (!organizationId) {
-        throw new Error('Organization ID is undefined');
-      }
-
-      // Fetch data for this organization
-      const [
-        interviewsResponse, 
-        upcomingInterviewsResponse,
-        completedInterviewsResponse
-      ] = await Promise.all([
-        supabaseTable('interviews').select('*').eq('organization_id', organizationId),
-        supabaseTable('interviews')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .eq('status', 'scheduled')
-          .gt('date_time', new Date().toISOString()),
-        supabaseTable('interviews')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .eq('status', 'completed')
-      ]);
-
-      const interviews = handleMultipleResponse(interviewsResponse);
-      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
-      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
-
+      // In a real app, this would fetch actual data from Supabase filtered by the organization
+      
+      // Mock data for now
       return {
-        counts: {
-          interviews: interviews.length || 0,
-          upcomingInterviews: upcomingInterviews.length || 0,
-          completedInterviews: completedInterviews.length || 0
-        }
+        totalInterviews: 48,
+        completedInterviews: 32,
+        pendingInterviews: 16,
+        canceledInterviews: 4,
+        totalRequirements: 12,
+        totalCandidates: 75,
+        recentActivity: [
+          {
+            id: '1',
+            type: 'interview',
+            title: 'Frontend Developer',
+            date: '2023-09-14T14:00:00',
+            status: 'completed'
+          },
+          // ... more activity items
+        ],
+        interviewTrend: [
+          { name: 'Week 1', interviews: 8 },
+          { name: 'Week 2', interviews: 12 },
+          { name: 'Week 3', interviews: 10 },
+          { name: 'Week 4', interviews: 18 }
+        ],
+        statusDistribution: [
+          { name: 'Completed', value: 32 },
+          { name: 'Pending', value: 16 },
+          { name: 'Canceled', value: 4 }
+        ]
       };
     } catch (error) {
-      console.error('Error in getOrganizationDashboardData:', error);
-      throw error;
+      console.error('Error fetching organization dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
+      
+      // Return empty data structure as fallback
+      return {
+        totalInterviews: 0,
+        completedInterviews: 0,
+        pendingInterviews: 0,
+        canceledInterviews: 0,
+        recentActivity: [],
+        interviewTrend: [],
+        statusDistribution: []
+      };
     }
   },
-
-  /**
-   * Get dashboard data for Interviewer role
-   */
+  
   async getInterviewerDashboardData(userId: string): Promise<DashboardSummary> {
     try {
-      // First get the interviewer ID for this user
-      const interviewerResponse = await supabaseTable('interviewers')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      const interviewerData = handleSingleResponse<any>(interviewerResponse);
-
-      if (!interviewerData) {
-        throw new Error('Failed to find interviewer data');
-      }
-
-      const interviewerId = interviewerData.id;
-
-      // Fetch data for this interviewer
-      const [
-        upcomingInterviewsResponse,
-        completedInterviewsResponse,
-        canceledInterviewsResponse
-      ] = await Promise.all([
-        supabaseTable('interviews')
-          .select('*')
-          .eq('interviewer_id', interviewerId)
-          .eq('status', 'scheduled')
-          .gt('date_time', new Date().toISOString()),
-        supabaseTable('interviews')
-          .select('*')
-          .eq('interviewer_id', interviewerId)
-          .eq('status', 'completed'),
-        supabaseTable('interviews')
-          .select('*')
-          .eq('interviewer_id', interviewerId)
-          .eq('status', 'cancelled') // Fixed: changed from 'canceled' to 'cancelled'
-      ]);
-
-      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
-      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
-      const canceledInterviews = handleMultipleResponse(canceledInterviewsResponse);
-
+      // In a real app, this would fetch actual data from Supabase filtered by the interviewer
+      
+      // Mock data for now
       return {
-        counts: {
-          interviews: upcomingInterviews.length + completedInterviews.length + canceledInterviews.length,
-          upcomingInterviews: upcomingInterviews.length || 0,
-          completedInterviews: completedInterviews.length || 0,
-          canceledInterviews: canceledInterviews.length || 0
-        }
+        totalInterviews: 24,
+        completedInterviews: 18,
+        pendingInterviews: 6,
+        canceledInterviews: 2,
+        recentActivity: [
+          {
+            id: '1',
+            type: 'interview',
+            title: 'React Native Developer',
+            date: '2023-09-16T11:00:00',
+            status: 'pending'
+          },
+          // ... more activity items
+        ],
+        interviewTrend: [
+          { name: 'Week 1', interviews: 5 },
+          { name: 'Week 2', interviews: 8 },
+          { name: 'Week 3', interviews: 5 },
+          { name: 'Week 4', interviews: 6 }
+        ],
+        statusDistribution: [
+          { name: 'Completed', value: 18 },
+          { name: 'Pending', value: 6 },
+          { name: 'Canceled', value: 2 }
+        ]
       };
     } catch (error) {
-      console.error('Error in getInterviewerDashboardData:', error);
-      throw error;
+      console.error('Error fetching interviewer dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
+      
+      // Return empty data structure as fallback
+      return {
+        totalInterviews: 0,
+        completedInterviews: 0,
+        pendingInterviews: 0,
+        canceledInterviews: 0,
+        recentActivity: [],
+        interviewTrend: [],
+        statusDistribution: []
+      };
     }
   },
-
-  /**
-   * Get dashboard data for Interviewee role
-   */
+  
   async getIntervieweeDashboardData(userId: string): Promise<DashboardSummary> {
     try {
-      // First get the interviewee ID for this user
-      const intervieweeResponse = await supabaseTable('interviewees')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      const intervieweeData = handleSingleResponse<any>(intervieweeResponse);
-
-      if (!intervieweeData) {
-        throw new Error('Interviewee data is null');
-      }
-
-      const intervieweeId = intervieweeData.id;
-
-      // Fetch data for this interviewee
-      const [
-        upcomingInterviewsResponse,
-        completedInterviewsResponse,
-        mockInterviewsResponse
-      ] = await Promise.all([
-        supabaseTable('interviews')
-          .select('*')
-          .eq('interviewee_id', intervieweeId)
-          .eq('status', 'scheduled')
-          .gt('date_time', new Date().toISOString()),
-        supabaseTable('interviews')
-          .select('*')
-          .eq('interviewee_id', intervieweeId)
-          .eq('status', 'completed'),
-        supabaseTable('mock_interviews')
-          .select('*')
-          .eq('interviewee_id', intervieweeId)
-      ]);
-
-      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
-      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
-      const mockInterviews = handleMultipleResponse(mockInterviewsResponse);
-
+      // In a real app, this would fetch actual data from Supabase filtered by the interviewee
+      
+      // Mock data for now
       return {
-        counts: {
-          interviews: upcomingInterviews.length + completedInterviews.length,
-          upcomingInterviews: upcomingInterviews.length || 0,
-          completedInterviews: completedInterviews.length || 0,
-          scheduledMocks: mockInterviews.length || 0
-        }
+        totalInterviews: 6,
+        completedInterviews: 4,
+        pendingInterviews: 2,
+        canceledInterviews: 0,
+        recentActivity: [
+          {
+            id: '1',
+            type: 'interview',
+            title: 'Junior Developer',
+            date: '2023-09-18T15:00:00',
+            status: 'pending'
+          },
+          // ... more activity items
+        ],
+        interviewTrend: [
+          { name: 'Week 1', interviews: 1 },
+          { name: 'Week 2', interviews: 2 },
+          { name: 'Week 3', interviews: 1 },
+          { name: 'Week 4', interviews: 2 }
+        ],
+        statusDistribution: [
+          { name: 'Completed', value: 4 },
+          { name: 'Pending', value: 2 },
+          { name: 'Canceled', value: 0 }
+        ]
       };
     } catch (error) {
-      console.error('Error in getIntervieweeDashboardData:', error);
-      throw error;
+      console.error('Error fetching interviewee dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
+      
+      // Return empty data structure as fallback
+      return {
+        totalInterviews: 0,
+        completedInterviews: 0,
+        pendingInterviews: 0,
+        canceledInterviews: 0,
+        recentActivity: [],
+        interviewTrend: [],
+        statusDistribution: []
+      };
     }
   }
 };

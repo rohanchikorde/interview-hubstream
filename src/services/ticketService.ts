@@ -18,7 +18,7 @@ export const ticketService = {
       // Map the data to our frontend types
       const mappedTickets: TicketWithDetails[] = tickets.map(ticket => ({
         id: ticket.ticket_id.toString(),
-        status: ticket.status,
+        status: ticket.status as TicketStatus,
         raised_by: ticket.user_id?.toString() || '',
         requirement_id: ticket.requirement_id?.toString() || '',
         company_id: ticket.company_id?.toString() || '',
@@ -54,7 +54,7 @@ export const ticketService = {
       // Map the data to our frontend types
       const mappedTicket: TicketWithDetails = {
         id: ticket.ticket_id.toString(),
-        status: ticket.status,
+        status: ticket.status as TicketStatus,
         raised_by: ticket.user_id?.toString() || '',
         requirement_id: ticket.requirement_id?.toString() || '',
         company_id: ticket.company_id?.toString() || '',
@@ -92,7 +92,7 @@ export const ticketService = {
       // Map the data to our frontend types
       const ticket: Ticket = {
         id: data.ticket_id.toString(),
-        status: data.status,
+        status: data.status as TicketStatus,
         raised_by: data.user_id?.toString() || '',
         requirement_id: data.requirement_id?.toString() || '',
         company_id: data.company_id?.toString() || '',
@@ -136,7 +136,7 @@ export const ticketService = {
     try {
       const { error } = await supabaseTable('support_tickets')
         .update({ 
-          status: 'escalated',
+          status: 'in_progress',
           updated_at: new Date().toISOString()
         })
         .eq('ticket_id', id);

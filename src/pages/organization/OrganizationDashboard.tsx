@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardService } from '@/services/dashboardService';
+import { dashboardService, Organization } from '@/services/dashboardService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -27,29 +27,6 @@ import {
   PlusCircle
 } from 'lucide-react';
 
-interface OrganizationStats {
-  totalInterviews?: number;
-  completedInterviews?: number;
-  pendingInterviews?: number;
-  totalCandidates?: number;
-  totalRequirements?: number;
-  averageScore?: number;
-  monthlyData?: {
-    month: string;
-    interviews: number;
-  }[];
-  statusDistribution?: {
-    name: string;
-    value: number;
-  }[];
-}
-
-interface Organization {
-  id: string;
-  name: string;
-  stats: OrganizationStats;
-}
-
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const OrganizationDashboard: React.FC = () => {
@@ -67,11 +44,7 @@ const OrganizationDashboard: React.FC = () => {
     try {
       const org = await dashboardService.getOrganization();
       if (org) {
-        setOrganization({
-          id: org.id || '',
-          name: org.name || '',
-          stats: org.stats || {},
-        });
+        setOrganization(org);
       }
     } catch (error) {
       console.error('Error fetching organization data:', error);

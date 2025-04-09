@@ -4,7 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { supabaseTable } from '@/utils/supabaseHelpers';
+import { supabaseTable, handleSingleResponse } from '@/utils/supabaseHelpers';
 
 // Define types for our context
 type Role = 'admin' | 'organization' | 'interviewer' | 'interviewee' | 'guest';
@@ -36,7 +36,7 @@ interface RegisterData {
 
 // Interface for the user data from the DB
 interface UserData {
-  user_id: string; // Changed to string to match auth.user.id
+  user_id: string;
   work_email: string;
   full_name: string;
   roles: string[];
@@ -112,9 +112,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Fetch user data from the users table
-      const { data, error } = await supabaseTable('users')
+      const { data, error } = await supabase
+        .from('users')
         .select('*')
-        .eq('user_id', currentSession.user.id)
+        .eq('user_id', parseInt(currentSession.user.id))
         .single();
 
       if (error) {
@@ -218,9 +219,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                            : 'organization';
 
         // Insert user data into the users table
-        const { error: userError } = await supabaseTable('users')
+        const { error: userError } = await supabase
+          .from('users')
           .insert({
-            user_id: authData.user.id,
+            user_id: parseInt(authData.user.id),
             work_email: userData.email,
             full_name: userData.name,
             roles: [validRole],
@@ -238,20 +240,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Create related record based on role
         if (validRole === 'admin') {
-          await supabaseTable('admins')
-            .insert({ user_id: authData.user.id });
+          await supabase
+            .from('admins')
+            .insert({ user_id: parseInt(authData.user.id) });
         } else if (validRole === 'organization') {
-          await supabaseTable('organizations')
+          await supabase
+            .from('organizations')
             .insert({ 
-              user_id: authData.user.id, 
+              user_id: parseInt(authData.user.id), 
               name: userData.company || 'Default Organization' 
             });
         } else if (validRole === 'interviewer') {
-          await supabaseTable('interviewers')
-            .insert({ user_id: authData.user.id });
+          await supabase
+            .from('interviewers')
+            .insert({ user_id: parseInt(authData.user.id) });
         } else if (validRole === 'interviewee') {
-          await supabaseTable('interviewees')
-            .insert({ user_id: authData.user.id });
+          await supabase
+            .from('interviewees')
+            .insert({ user_id: parseInt(authData.user.id) });
         }
 
         toast.success('Account created successfully! Please log in.');

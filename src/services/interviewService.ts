@@ -1,46 +1,113 @@
 
-import { supabaseTable, handleSingleResponse, handleMultipleResponse, castResult } from "@/utils/supabaseHelpers";
-import { 
-  Interview, 
-  InterviewWithDetails, 
-  ScheduleInterviewRequest, 
-  UpdateInterviewStatusRequest,
-  AddInterviewFeedbackRequest,
-  InterviewStatus
-} from "@/types/interview";
+import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
+import { Interview, InterviewWithDetails, ScheduleInterviewRequest, AddInterviewFeedbackRequest, UpdateInterviewStatusRequest, InterviewStatus } from "@/types/interview";
 import { toast } from "sonner";
 
 export const interviewService = {
+  async getInterviews(): Promise<InterviewWithDetails[]> {
+    try {
+      const response = await supabaseTable('interviews')
+        .select(`
+          *,
+          candidates (*),
+          jobs (*)
+        `)
+        .order('scheduled_at', { ascending: false });
+
+      const interviews = handleMultipleResponse<any>(response);
+      
+      // Map the data to our frontend types
+      const mappedInterviews: InterviewWithDetails[] = interviews.map(interview => ({
+        id: interview.interview_id.toString(),
+        candidate_id: interview.candidate_id?.toString() || '',
+        interviewer_id: interview.interviewer_id?.toString() || '',
+        requirement_id: interview.job_id?.toString() || '',
+        scheduled_at: interview.scheduled_at,
+        status: interview.status as InterviewStatus,
+        created_at: interview.created_at,
+        updated_at: interview.created_at,
+        candidate_name: interview.candidates?.name || '',
+        requirement_title: interview.jobs?.title || '',
+      }));
+      
+      return mappedInterviews;
+    } catch (error: any) {
+      toast.error(`Failed to fetch interviews: ${error.message}`);
+      return [];
+    }
+  },
+  
+  async getInterviewById(id: string): Promise<InterviewWithDetails | null> {
+    try {
+      const response = await supabaseTable('interviews')
+        .select(`
+          *,
+          candidates (*),
+          jobs (*)
+        `)
+        .eq('interview_id', id)
+        .single();
+
+      const interview = handleSingleResponse<any>(response);
+      
+      if (!interview) {
+        return null;
+      }
+      
+      // Map the data to our frontend types
+      const mappedInterview: InterviewWithDetails = {
+        id: interview.interview_id.toString(),
+        candidate_id: interview.candidate_id?.toString() || '',
+        interviewer_id: interview.interviewer_id?.toString() || '',
+        requirement_id: interview.job_id?.toString() || '',
+        scheduled_at: interview.scheduled_at,
+        status: interview.status as InterviewStatus,
+        feedback: interview.interviewer_notes ? {
+          rating: 0,
+          comments: interview.interviewer_notes
+        } : null,
+        created_at: interview.created_at,
+        updated_at: interview.updated_at || interview.created_at,
+        candidate_name: interview.candidates?.name || '',
+        requirement_title: interview.jobs?.title || '',
+      };
+      
+      return mappedInterview;
+    } catch (error: any) {
+      toast.error(`Failed to fetch interview: ${error.message}`);
+      return null;
+    }
+  },
+  
   async scheduleInterview(request: ScheduleInterviewRequest): Promise<Interview | null> {
     try {
-      // Map request to interviews table structure
-      const response = await supabaseTable('interviews')
+      const { data, error } = await supabaseTable('interviews')
         .insert({
           candidate_id: parseInt(request.candidate_id),
           interviewer_id: parseInt(request.interviewer_id),
-          job_id: parseInt(request.requirement_id), // Using job_id as equivalent
+          job_id: parseInt(request.requirement_id),
           scheduled_at: request.scheduled_at,
-          status: 'scheduled', // Default status
+          status: 'scheduled',
         })
         .select()
         .single();
 
-      const data = handleSingleResponse<any>(response);
+      if (error) throw error;
       
       if (!data) {
-        throw new Error('Failed to insert interview');
+        return null;
       }
-      
-      // Map DB response to Interview type
+
+      // Map the data to our frontend types
       const interview: Interview = {
         id: data.interview_id.toString(),
-        candidate_id: data.candidate_id.toString(),
-        interviewer_id: data.interviewer_id.toString(),
-        requirement_id: data.job_id.toString(),
+        candidate_id: data.candidate_id?.toString() || '',
+        interviewer_id: data.interviewer_id?.toString() || '',
+        requirement_id: data.job_id?.toString() || '',
         scheduled_at: data.scheduled_at,
-        status: mapDBStatusToInterviewStatus(data.status),
+        status: data.status as InterviewStatus,
         created_at: data.created_at,
-        updated_at: data.created_at,
+        updated_at: data.created_at
       };
       
       return interview;
@@ -49,107 +116,15 @@ export const interviewService = {
       return null;
     }
   },
-
-  async getInterviews(filters?: { status?: InterviewStatus }): Promise<InterviewWithDetails[]> {
+  
+  async updateInterviewStatus(id: string, statusUpdate: UpdateInterviewStatusRequest): Promise<boolean> {
     try {
-      let query = supabaseTable('interviews')
-        .select(`
-          *,
-          candidates (name, email),
-          interviewers (user_id, availability),
-          jobs (title, description)
-        `);
-
-      if (filters?.status) {
-        // Map to DB status
-        const dbStatus = mapInterviewStatusToDBStatus(filters.status);
-        query = query.eq('status', dbStatus);
-      }
-
-      const { data, error } = await query.order('scheduled_at', { ascending: true });
-
-      if (error) throw error;
-
-      // Map data to InterviewWithDetails format
-      const interviews: InterviewWithDetails[] = (data || []).map((interview: any) => ({
-        id: interview.interview_id?.toString(),
-        candidate_id: interview.candidate_id?.toString(),
-        interviewer_id: interview.interviewer_id?.toString(),
-        requirement_id: interview.job_id?.toString(),
-        scheduled_at: interview.scheduled_at,
-        status: mapDBStatusToInterviewStatus(interview.status),
-        feedback: interview.interviewer_notes ? { 
-          rating: 0, // Default value
-          comments: interview.interviewer_notes 
-        } : null,
-        created_at: interview.created_at,
-        updated_at: interview.updated_at || interview.created_at,
-        candidate_name: interview.candidates?.name || '',
-        interviewer_name: '', // Would need to join with users table
-        requirement_title: interview.jobs?.title || ''
-      }));
-      
-      return interviews;
-    } catch (error: any) {
-      toast.error(`Failed to fetch interviews: ${error.message}`);
-      return [];
-    }
-  },
-
-  async getInterviewById(id: string): Promise<InterviewWithDetails | null> {
-    try {
-      const response = await supabaseTable('interviews')
-        .select(`
-          *,
-          candidates (name, email),
-          interviewers (user_id, availability),
-          jobs (title, description)
-        `)
-        .eq('interview_id', parseInt(id))
-        .single();
-
-      const data = handleSingleResponse<any>(response);
-      
-      if (!data) {
-        throw new Error('Interview not found');
-      }
-      
-      // Map data to InterviewWithDetails
-      const interview: InterviewWithDetails = {
-        id: data.interview_id.toString(),
-        candidate_id: data.candidate_id.toString(),
-        interviewer_id: data.interviewer_id.toString(),
-        requirement_id: data.job_id.toString(),
-        scheduled_at: data.scheduled_at,
-        status: mapDBStatusToInterviewStatus(data.status),
-        feedback: data.interviewer_notes ? { 
-          rating: 0, // Default
-          comments: data.interviewer_notes 
-        } : null,
-        created_at: data.created_at,
-        updated_at: data.updated_at || data.created_at,
-        candidate_name: data.candidates?.name || '',
-        interviewer_name: '', // Would need to join with users table
-        requirement_title: data.jobs?.title || ''
-      };
-      
-      return interview;
-    } catch (error: any) {
-      toast.error(`Failed to fetch interview: ${error.message}`);
-      return null;
-    }
-  },
-
-  async updateInterviewStatus(id: string, request: UpdateInterviewStatusRequest): Promise<boolean> {
-    try {
-      // Map status to DB format
-      const dbStatus = mapInterviewStatusToDBStatus(request.status);
-      
       const { error } = await supabaseTable('interviews')
         .update({ 
-          status: dbStatus
+          status: statusUpdate.status.toLowerCase(),
+          updated_at: new Date().toISOString()
         })
-        .eq('interview_id', parseInt(id));
+        .eq('interview_id', id);
 
       if (error) throw error;
       return true;
@@ -158,30 +133,15 @@ export const interviewService = {
       return false;
     }
   },
-
-  async addInterviewFeedback(id: string, request: AddInterviewFeedbackRequest): Promise<boolean> {
-    try {
-      const { error } = await supabaseTable('interviews')
-        .update({
-          interviewer_notes: JSON.stringify(request.feedback)
-        })
-        .eq('interview_id', parseInt(id));
-
-      if (error) throw error;
-      return true;
-    } catch (error: any) {
-      toast.error(`Failed to add interview feedback: ${error.message}`);
-      return false;
-    }
-  },
-
+  
   async cancelInterview(id: string): Promise<boolean> {
     try {
       const { error } = await supabaseTable('interviews')
         .update({ 
-          status: 'canceled' // Using DB status format
+          status: 'rescheduled', // Use 'rescheduled' which is a valid status in the DB
+          updated_at: new Date().toISOString()
         })
-        .eq('interview_id', parseInt(id));
+        .eq('interview_id', id);
 
       if (error) throw error;
       return true;
@@ -190,31 +150,60 @@ export const interviewService = {
       return false;
     }
   },
-
-  async rescheduleInterview(id: string, newDateTime: string): Promise<boolean> {
+  
+  async addFeedback(id: string, feedbackData: AddInterviewFeedbackRequest): Promise<boolean> {
     try {
-      // Replace the RPC call with a simpler approach that works with Supabase
-      const response = await supabaseTable('interviews')
-        .select('reschedule_count')
-        .eq('interview_id', parseInt(id))
-        .single();
-      
-      const interview = handleSingleResponse<any>(response);
-      
-      if (!interview) {
-        throw new Error('Interview not found');
-      }
-      
-      const newCount = (interview.reschedule_count || 0) + 1;
-      
       const { error } = await supabaseTable('interviews')
-        .update({
-          scheduled_at: newDateTime,
-          reschedule_count: newCount
+        .update({ 
+          interviewer_notes: feedbackData.feedback.comments,
+          status: 'completed',
+          updated_at: new Date().toISOString()
         })
-        .eq('interview_id', parseInt(id));
+        .eq('interview_id', id);
 
       if (error) throw error;
+      
+      // We will also need to insert to interview_evaluations table
+      // This is just a placeholder for now
+      const { error: evalError } = await supabaseTable('interview_evaluations')
+        .insert({
+          interview_id: parseInt(id),
+          score: feedbackData.feedback.rating,
+          feedback: feedbackData.feedback.comments,
+        });
+        
+      if (evalError) {
+        console.error("Failed to save evaluation details:", evalError);
+      }
+      
+      return true;
+    } catch (error: any) {
+      toast.error(`Failed to save feedback: ${error.message}`);
+      return false;
+    }
+  },
+  
+  async rescheduleInterview(id: string, newDate: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabaseTable('interviews')
+        .select('reschedule_count')
+        .eq('interview_id', id)
+        .single();
+        
+      if (error) throw error;
+      
+      const rescheduleCount = data?.reschedule_count || 0;
+      
+      const { error: updateError } = await supabaseTable('interviews')
+        .update({ 
+          scheduled_at: newDate,
+          status: 'rescheduled',
+          reschedule_count: rescheduleCount + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('interview_id', id);
+
+      if (updateError) throw updateError;
       return true;
     } catch (error: any) {
       toast.error(`Failed to reschedule interview: ${error.message}`);
@@ -222,24 +211,3 @@ export const interviewService = {
     }
   }
 };
-
-// Helper functions to map between application statuses and DB statuses
-function mapDBStatusToInterviewStatus(dbStatus: string): InterviewStatus {
-  switch(dbStatus) {
-    case 'scheduled': return 'Scheduled';
-    case 'in_progress': return 'In Progress';
-    case 'completed': return 'Completed';
-    case 'canceled': return 'Canceled';
-    default: return 'Scheduled';
-  }
-}
-
-function mapInterviewStatusToDBStatus(status: InterviewStatus): string {
-  switch(status) {
-    case 'Scheduled': return 'scheduled';
-    case 'In Progress': return 'in_progress';
-    case 'Completed': return 'completed';
-    case 'Canceled': return 'canceled';
-    default: return 'scheduled';
-  }
-}
