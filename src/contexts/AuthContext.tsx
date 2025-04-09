@@ -1,3 +1,4 @@
+
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -82,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
         
         // If the user just signed in, redirect to their dashboard
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           const role = session.user.user_metadata?.role as UserRole;
           const dashboardPath = getDashboardRouteByRole(role);
           navigate(dashboardPath);
@@ -112,18 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Get the appropriate dashboard path based on the user's role
   const getDashboardPath = (): string => {
     const role = getUserRole();
-    switch (role) {
-      case 'admin':
-        return '/dashboard';
-      case 'organization':
-        return '/organization';
-      case 'interviewer':
-        return '/interviewer';
-      case 'interviewee':
-        return '/interviewee';
-      default:
-        return '/login';
-    }
+    return getDashboardRouteByRole(role);
   };
 
   // Register function
@@ -159,15 +149,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         toast.error(error.message);
-      } else {
+      } else if (data.user) {
         toast.success('Account created successfully! Please check your email to verify.');
         
         // Create user profile in the appropriate table based on role
-        if (data.user) {
-          await createUserProfileByRole(data.user.id, credentials);
-        }
+        await createUserProfileByRole(data.user.id, credentials);
         
-        navigate('/login');
+        // For development purposes, auto sign-in the user
+        // In production, you would typically wait for email verification
+        if (!data.session) {
+          // If no session was returned, attempt to sign in immediately
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          });
+          
+          if (signInError) {
+            console.error("Auto-login error:", signInError);
+            navigate('/login');
+          } else if (signInData.session) {
+            // Update session and user state
+            setSession(signInData.session);
+            setUser({
+              ...signInData.user,
+              name: signInData.user.user_metadata?.full_name,
+              company: signInData.user.user_metadata?.company,
+              role: signInData.user.user_metadata?.role
+            });
+            setIsAuthenticated(true);
+            
+            // Redirect to appropriate dashboard
+            const role = signInData.user.user_metadata?.role as UserRole;
+            const dashboardPath = getDashboardRouteByRole(role);
+            navigate(dashboardPath);
+          }
+        } else {
+          navigate('/login');
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -186,11 +204,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         toast.error(error.message);
-      } else {
-        // Get user with role
-        const role = data.user?.user_metadata?.role || 'interviewee';
+      } else if (data.user) {
+        // Get user with role from metadata
+        const role = data.user.user_metadata?.role || 'interviewee';
+        const name = data.user.user_metadata?.full_name || 'User';
         
-        toast.success(`Welcome back, ${data.user?.user_metadata?.full_name || 'User'}!`);
+        toast.success(`Welcome back, ${name}!`);
+        
+        // Update user state
+        setUser({
+          ...data.user,
+          name: name,
+          company: data.user.user_metadata?.company,
+          role: role
+        });
+        
+        // Fetch additional user data from database tables if needed
+        if (data.user.id) {
+          const profileData = await sessionService.getUserProfileByRole(credentials.email, role as UserRole);
+          if (profileData) {
+            // Could enhance the user state with additional data from profile
+            console.log("User profile data:", profileData);
+          }
+        }
         
         // Redirect to the appropriate dashboard based on role
         const dashboardPath = getDashboardRouteByRole(role as UserRole);
@@ -212,6 +248,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // Clear any persistent state
         sessionService.clearPersistentState();
+        
+        // Reset auth state
+        setSession(null);
+        setUser(null);
+        setIsAuthenticated(false);
         
         toast.success('Signed out successfully!');
         if (redirect) {
@@ -275,71 +316,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             password_hash: "managed_by_supabase",
             roles: { role: "admin" },
             is_verified: true,
-            auth_user_id: userId  // Add the auth user ID
+            auth_user_id: userId
           });
           break;
           
         case 'organization':
           // Create organization in the companies table
-          await supabase.from("companies").insert({
+          const { data: companyData } = await supabase.from("companies").insert({
             company_name: userData.company || userData.name,
             subscription_tier: 'basic'
-          });
+          }).select('company_id').single();
           
           // Also create entry in users table with auth_user_id
-          await supabase.from("users").insert({
+          const { data: userData_ } = await supabase.from("users").insert({
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "organization" },
             is_verified: true,
-            auth_user_id: userId  // Add the auth user ID
-          });
+            auth_user_id: userId
+          }).select('user_id').single();
           
           // Create company_team entry to link user to company with auth_user_id
-          await supabase.from("company_team").insert({
-            role: 'client_admin',
-            auth_user_id: userId  // Add the auth user ID
-          });
+          if (companyData && userData_) {
+            await supabase.from("company_team").insert({
+              company_id: companyData.company_id,
+              user_id: userData_.user_id,
+              role: 'client_admin',
+              auth_user_id: userId
+            });
+          }
           break;
           
         case 'interviewer':
-          // Create interviewer in the interviewers table with auth_user_id
-          await supabase.from("interviewers").insert({
-            expertise: userData.skills ? JSON.parse(userData.skills) : [],
-            is_active: true,
-            auth_user_id: userId  // Add the auth user ID
-          });
-          
-          // Also create entry in users table with auth_user_id
-          await supabase.from("users").insert({
+          // Create entry in users table with auth_user_id
+          const { data: interviewerUserData } = await supabase.from("users").insert({
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "interviewer" },
             is_verified: true,
-            auth_user_id: userId  // Add the auth user ID
-          });
+            auth_user_id: userId
+          }).select('user_id').single();
+          
+          // Create interviewer in the interviewers table with auth_user_id
+          if (interviewerUserData) {
+            await supabase.from("interviewers").insert({
+              user_id: interviewerUserData.user_id,
+              expertise: userData.skills ? JSON.parse(userData.skills) : [],
+              is_active: true,
+              auth_user_id: userId
+            });
+          }
           break;
           
         case 'interviewee':
-          // Create candidate in the candidates table with auth_user_id
-          await supabase.from("candidates").insert({
-            email: userData.email,
-            name: userData.name,
-            source: 'client_upload',
-            auth_user_id: userId  // Add the auth user ID
-          });
-          
-          // Also create entry in users table with auth_user_id
-          await supabase.from("users").insert({
+          // Create entry in users table with auth_user_id
+          const { data: candidateUserData } = await supabase.from("users").insert({
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "interviewee" },
             is_verified: true,
-            auth_user_id: userId  // Add the auth user ID
-          });
+            auth_user_id: userId
+          }).select('user_id').single();
+          
+          // Create candidate in the candidates table with auth_user_id
+          if (candidateUserData) {
+            await supabase.from("candidates").insert({
+              user_id: candidateUserData.user_id,
+              name: userData.name,
+              email: userData.email,
+              source: 'client_upload',
+              auth_user_id: userId
+            });
+          }
           break;
           
         default:

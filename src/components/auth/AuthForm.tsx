@@ -78,7 +78,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
       if (type === 'login') {
         const loginData = data as LoginFormValues;
         await login(loginData.email, loginData.password);
-        // Redirection will be handled by AuthContext upon successful login
       } else {
         const registerData = data as RegisterFormValues;
         await register({
@@ -86,17 +85,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
           email: registerData.email,
           password: registerData.password,
           role: registerData.role,
-          company: registerData.company
+          company: registerData.company || registerData.name // Use name as company if not provided
         });
-        // Register function in AuthContext will handle the redirection
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      // Toast notifications are now handled in the auth context
+      // Toast notifications are handled in the auth context
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Determine which fields to show based on selected role for registration
+  const showCompanyField = type === 'register' && form.watch('role') === 'organization';
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -134,23 +135,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
 
               <FormField
                 control={form.control}
-                name="company"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Your company" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
@@ -159,15 +143,34 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-intervue-600/50 focus:border-intervue-600 dark:focus:ring-intervue-500/50 dark:focus:border-intervue-500 transition-all"
                       {...field}
                     >
-                      <option value="admin">Admin</option>
                       <option value="organization">Hiring Manager / Client</option>
                       <option value="interviewer">Interviewer</option>
-                      <option value="interviewee">Interviewee</option>
+                      <option value="interviewee">Interviewee / Candidate</option>
+                      <option value="admin">Admin</option>
                     </select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {showCompanyField && (
+                <FormField
+                  control={form.control}
+                  name="company"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Your company" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </>
           )}
 
@@ -261,7 +264,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
             disabled={isSubmitting}
           >
             <span>{type === 'login' ? 'Sign in' : 'Create Account'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            ) : (
+              <ArrowRight className="w-4 h-4" />
+            )}
           </Button>
 
           {type === 'login' ? (
