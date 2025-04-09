@@ -162,6 +162,7 @@ export type Database = {
       }
       candidates: {
         Row: {
+          auth_user_id: string | null
           candidate_id: number
           created_at: string | null
           email: string
@@ -171,6 +172,7 @@ export type Database = {
           user_id: number | null
         }
         Insert: {
+          auth_user_id?: string | null
           candidate_id?: number
           created_at?: string | null
           email: string
@@ -180,6 +182,7 @@ export type Database = {
           user_id?: number | null
         }
         Update: {
+          auth_user_id?: string | null
           candidate_id?: number
           created_at?: string | null
           email?: string
@@ -283,6 +286,7 @@ export type Database = {
       }
       company_team: {
         Row: {
+          auth_user_id: string | null
           company_id: number | null
           company_team_id: number
           created_at: string | null
@@ -290,6 +294,7 @@ export type Database = {
           user_id: number | null
         }
         Insert: {
+          auth_user_id?: string | null
           company_id?: number | null
           company_team_id?: number
           created_at?: string | null
@@ -297,6 +302,7 @@ export type Database = {
           user_id?: number | null
         }
         Update: {
+          auth_user_id?: string | null
           company_id?: number | null
           company_team_id?: number
           created_at?: string | null
@@ -411,6 +417,7 @@ export type Database = {
       }
       interviewers: {
         Row: {
+          auth_user_id: string | null
           availability: Json | null
           created_at: string | null
           expertise: Json | null
@@ -420,6 +427,7 @@ export type Database = {
           user_id: number | null
         }
         Insert: {
+          auth_user_id?: string | null
           availability?: Json | null
           created_at?: string | null
           expertise?: Json | null
@@ -429,6 +437,7 @@ export type Database = {
           user_id?: number | null
         }
         Update: {
+          auth_user_id?: string | null
           availability?: Json | null
           created_at?: string | null
           expertise?: Json | null
@@ -759,6 +768,7 @@ export type Database = {
       }
       users: {
         Row: {
+          auth_user_id: string | null
           created_at: string | null
           full_name: string
           is_verified: boolean | null
@@ -769,6 +779,7 @@ export type Database = {
           work_email: string
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string | null
           full_name: string
           is_verified?: boolean | null
@@ -779,6 +790,7 @@ export type Database = {
           work_email: string
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string | null
           full_name?: string
           is_verified?: boolean | null

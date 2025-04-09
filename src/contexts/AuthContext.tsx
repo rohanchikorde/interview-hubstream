@@ -268,79 +268,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       switch (role) {
         case 'admin':
-          // Create admin user in the users table, omitting user_id if it's a string
+          // Create admin user in the users table with auth_user_id
           await supabase.from("users").insert({
-            // We omit user_id since it's expected to be a number but we have a string UUID
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "admin" },
-            is_verified: true
+            is_verified: true,
+            auth_user_id: userId  // Add the auth user ID
           });
           break;
           
         case 'organization':
-          // Create organization in the companies table, omitting company_id
+          // Create organization in the companies table
           await supabase.from("companies").insert({
-            // We omit company_id since it's expected to be a number but we have a string UUID
             company_name: userData.company || userData.name,
             subscription_tier: 'basic'
           });
           
-          // Also create entry in users table
+          // Also create entry in users table with auth_user_id
           await supabase.from("users").insert({
-            // We omit user_id
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "organization" },
-            is_verified: true
+            is_verified: true,
+            auth_user_id: userId  // Add the auth user ID
           });
           
-          // Create company_team entry to link user to company
+          // Create company_team entry to link user to company with auth_user_id
           await supabase.from("company_team").insert({
-            // We don't include numeric IDs for string UUIDs
-            role: 'client_admin'
+            role: 'client_admin',
+            auth_user_id: userId  // Add the auth user ID
           });
           break;
           
         case 'interviewer':
-          // Create interviewer in the interviewers table
+          // Create interviewer in the interviewers table with auth_user_id
           await supabase.from("interviewers").insert({
-            // We omit user_id and interviewer_id
             expertise: userData.skills ? JSON.parse(userData.skills) : [],
-            is_active: true
+            is_active: true,
+            auth_user_id: userId  // Add the auth user ID
           });
           
-          // Also create entry in users table
+          // Also create entry in users table with auth_user_id
           await supabase.from("users").insert({
-            // We omit user_id
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "interviewer" },
-            is_verified: true
+            is_verified: true,
+            auth_user_id: userId  // Add the auth user ID
           });
           break;
           
         case 'interviewee':
-          // Create candidate in the candidates table
+          // Create candidate in the candidates table with auth_user_id
           await supabase.from("candidates").insert({
-            // We omit user_id and candidate_id
-            // Fix the source value to use a valid enum value and rename 'name' to match the field name in DB
             email: userData.email,
-            name: userData.name, // Using 'name' field which exists in the candidates table
-            source: 'client_upload' // Using a valid enum value from "client_upload" | "internal"
+            name: userData.name,
+            source: 'client_upload',
+            auth_user_id: userId  // Add the auth user ID
           });
           
-          // Also create entry in users table
+          // Also create entry in users table with auth_user_id
           await supabase.from("users").insert({
-            // We omit user_id
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
             roles: { role: "interviewee" },
-            is_verified: true
+            is_verified: true,
+            auth_user_id: userId  // Add the auth user ID
           });
           break;
           

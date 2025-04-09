@@ -62,21 +62,24 @@ export const sessionService = {
 
   /**
    * Get user profile data from the appropriate table based on role
-   * @param userId The user's ID
+   * @param userId The user's ID (typically email)
    * @param role The user's role
    * @returns The user's profile data or null if not found
    */
   getUserProfileByRole: async (userId: string, role: UserRole): Promise<any | null> => {
     try {
       let data = null;
+      // Get the auth user ID from Supabase auth
+      const { data: authUserData } = await supabase.auth.getUser();
+      const authUserId = authUserData?.user?.id;
       
       switch (role) {
         case 'admin':
-          // Fetch admin profile
+          // Fetch admin profile directly connecting with auth user ID
           const { data: adminData, error: adminError } = await supabase
             .from('users')
             .select('*')
-            .eq('work_email', userId) // Using work_email as a unique identifier instead of user_id
+            .eq('auth_user_id', authUserId)
             .single();
           
           if (adminError) throw adminError;
@@ -96,48 +99,80 @@ export const sessionService = {
           break;
           
         case 'interviewer':
-          // First, get the user to find their user_id
-          const { data: interviewerUser, error: interviewerUserError } = await supabase
-            .from('users')
-            .select('user_id')
-            .eq('work_email', userId)
-            .single();
-            
-          if (interviewerUserError) throw interviewerUserError;
-          
-          // Then use the user_id to get the interviewer record
-          if (interviewerUser?.user_id) {
+          // Get interviewer data by auth_user_id
+          if (authUserId) {
             const { data: interviewerData, error: interviewerError } = await supabase
               .from('interviewers')
               .select('*')
-              .eq('user_id', interviewerUser.user_id)
+              .eq('auth_user_id', authUserId)
               .single();
             
-            if (interviewerError) throw interviewerError;
-            data = { ...interviewerData, work_email: userId };
+            if (interviewerError) {
+              // Fallback to the old approach if auth_user_id isn't set yet
+              const { data: userRecord } = await supabase
+                .from('users')
+                .select('user_id')
+                .eq('work_email', userId)
+                .single();
+              
+              if (userRecord?.user_id) {
+                const { data: fallbackData, error: fallbackError } = await supabase
+                  .from('interviewers')
+                  .select('*')
+                  .eq('user_id', userRecord.user_id)
+                  .single();
+                
+                if (!fallbackError) {
+                  data = { ...fallbackData, work_email: userId };
+                  // Update the interviewer with the auth_user_id for next time
+                  await supabase
+                    .from('interviewers')
+                    .update({ auth_user_id: authUserId })
+                    .eq('user_id', userRecord.user_id);
+                }
+              }
+            } else {
+              data = { ...interviewerData, work_email: userId };
+            }
           }
           break;
           
         case 'interviewee':
-          // First, get the user to find their user_id
-          const { data: intervieweeUser, error: intervieweeUserError } = await supabase
-            .from('users')
-            .select('user_id')
-            .eq('work_email', userId)
-            .single();
-            
-          if (intervieweeUserError) throw intervieweeUserError;
-          
-          // Then use the user_id to get the candidate record
-          if (intervieweeUser?.user_id) {
+          // Get candidate data by auth_user_id
+          if (authUserId) {
             const { data: intervieweeData, error: intervieweeError } = await supabase
               .from('candidates')
               .select('*')
-              .eq('user_id', intervieweeUser.user_id)
+              .eq('auth_user_id', authUserId)
               .single();
             
-            if (intervieweeError) throw intervieweeError;
-            data = { ...intervieweeData, work_email: userId };
+            if (intervieweeError) {
+              // Fallback to the old approach if auth_user_id isn't set yet
+              const { data: userRecord } = await supabase
+                .from('users')
+                .select('user_id')
+                .eq('work_email', userId)
+                .single();
+              
+              if (userRecord?.user_id) {
+                const { data: fallbackData, error: fallbackError } = await supabase
+                  .from('candidates')
+                  .select('*')
+                  .eq('user_id', userRecord.user_id)
+                  .single();
+                
+                if (!fallbackError) {
+                  data = { ...fallbackData, work_email: userId };
+                  // Update the candidate with the auth_user_id for next time
+                  await supabase
+                    .from('candidates')
+                    .update({ auth_user_id: authUserId })
+                    .eq('user_id', userRecord.user_id);
+                }
+              }
+            } else {
+              data = { ...intervieweeData, work_email: userId };
+            }
           }
           break;
           
