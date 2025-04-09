@@ -19,7 +19,7 @@ type TableName = KnownTableName | CustomTableName;
 export const supabaseTable = (tableName: TableName) => {
   // Cast to any to bypass TypeScript's strict checking
   // This allows us to use table names that might not be in the schema
-  return supabase.from(tableName as string) as any;
+  return supabase.from(tableName as any);
 };
 
 /**

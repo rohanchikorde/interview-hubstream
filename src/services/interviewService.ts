@@ -186,15 +186,20 @@ export const interviewService = {
 
   async rescheduleInterview(id: string, newDateTime: string): Promise<boolean> {
     try {
-      // Use an increment expression instead of .sql()
+      // Replace the RPC call with a simpler approach that works with Supabase
+      const { data: interview, error: fetchError } = await supabaseTable('interviews')
+        .select('reschedule_count')
+        .eq('interview_id', parseInt(id))
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const newCount = (interview?.reschedule_count || 0) + 1;
+      
       const { error } = await supabaseTable('interviews')
         .update({
           scheduled_at: newDateTime,
-          reschedule_count: supabase.rpc('increment', { 
-            row_id: parseInt(id), 
-            table_name: 'interviews', 
-            column_name: 'reschedule_count' 
-          })
+          reschedule_count: newCount
         })
         .eq('interview_id', parseInt(id));
 
