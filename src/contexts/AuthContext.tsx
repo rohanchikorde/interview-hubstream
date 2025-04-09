@@ -1,4 +1,3 @@
-
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -271,7 +270,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         case 'admin':
           // Create admin user in the users table
           await supabase.from("users").insert({
-            user_id: userId,
+            user_id: userId, // Using UUID string directly
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
@@ -283,14 +282,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         case 'organization':
           // Create organization in the companies table
           await supabase.from("companies").insert({
-            company_id: userId, // Using userId as company_id for simplicity
+            company_id: userId, // Using UUID string directly
             company_name: userData.company || userData.name,
             subscription_tier: 'basic'
           });
           
           // Also create entry in users table
           await supabase.from("users").insert({
-            user_id: userId,
+            user_id: userId, // Using UUID string directly
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
@@ -300,7 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Create company_team entry to link user to company
           await supabase.from("company_team").insert({
-            user_id: userId,
+            user_id: userId, // Using UUID string directly
             company_id: userId, // Same as above
             role: 'client_admin'
           });
@@ -309,15 +308,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         case 'interviewer':
           // Create interviewer in the interviewers table
           await supabase.from("interviewers").insert({
-            user_id: userId,
-            interviewer_id: userId, // Using userId as interviewer_id for simplicity
+            user_id: userId, // Using UUID string directly
+            interviewer_id: userId, // Using UUID string directly
             expertise: userData.skills ? JSON.parse(userData.skills) : [],
             is_active: true
           });
           
           // Also create entry in users table
           await supabase.from("users").insert({
-            user_id: userId,
+            user_id: userId, // Using UUID string directly
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
@@ -329,8 +328,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         case 'interviewee':
           // Create candidate in the candidates table
           await supabase.from("candidates").insert({
-            user_id: userId,
-            candidate_id: userId, // Using userId as candidate_id for simplicity
+            user_id: userId, // Using UUID string directly
+            candidate_id: userId, // Using UUID string directly
             name: userData.name,
             email: userData.email,
             source: 'self_signup'
@@ -338,7 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Also create entry in users table
           await supabase.from("users").insert({
-            user_id: userId,
+            user_id: userId, // Using UUID string directly
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",

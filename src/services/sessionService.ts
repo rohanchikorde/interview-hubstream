@@ -76,7 +76,7 @@ export const sessionService = {
           const { data: adminData, error: adminError } = await supabase
             .from('users')
             .select('*')
-            .eq('user_id', userId)
+            .eq('work_email', userId) // Using work_email as a unique identifier instead of user_id
             .single();
           
           if (adminError) throw adminError;
@@ -88,7 +88,7 @@ export const sessionService = {
           const { data: orgData, error: orgError } = await supabase
             .from('companies')
             .select('*')
-            .eq('company_id', userId)
+            .eq('company_name', userId) // Using company_name instead of company_id
             .single();
           
           if (orgError) throw orgError;
@@ -100,7 +100,7 @@ export const sessionService = {
           const { data: interviewerData, error: interviewerError } = await supabase
             .from('interviewers')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', userId) // Using UUID string from auth directly
             .single();
           
           if (interviewerError) throw interviewerError;
@@ -112,7 +112,7 @@ export const sessionService = {
           const { data: intervieweeData, error: intervieweeError } = await supabase
             .from('candidates')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', userId) // Using UUID string from auth directly
             .single();
           
           if (intervieweeError) throw intervieweeError;
