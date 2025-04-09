@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 /**
  * Extended TableName type to include both schema tables and custom tables
@@ -29,4 +30,34 @@ export const supabaseTable = (tableName: TableName) => {
  */
 export const castResult = <T>(data: any): T => {
   return data as T;
+};
+
+/**
+ * Helper function to handle a PostgrestSingleResponse
+ * Checks if there is an error, otherwise safely extracts data
+ * @param response The response from a Supabase query
+ * @returns The data or null if there was an error
+ */
+export const handleSingleResponse = <T>(response: PostgrestSingleResponse<any>): T | null => {
+  if (response.error) {
+    console.error("Supabase query error:", response.error);
+    return null;
+  }
+  
+  return response.data as T;
+};
+
+/**
+ * Helper function to handle a PostgrestResponse for multiple records
+ * Checks if there is an error, otherwise safely extracts data array
+ * @param response The response from a Supabase query
+ * @returns The data array or empty array if there was an error
+ */
+export const handleMultipleResponse = <T>(response: { data: any; error: PostgrestError | null }): T[] => {
+  if (response.error) {
+    console.error("Supabase query error:", response.error);
+    return [];
+  }
+  
+  return (response.data || []) as T[];
 };

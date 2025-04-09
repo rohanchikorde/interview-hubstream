@@ -1,6 +1,5 @@
 
-import { supabaseTable, castResult } from "@/utils/supabaseHelpers";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseTable, handleSingleResponse, handleMultipleResponse, castResult } from "@/utils/supabaseHelpers";
 import { 
   Interview, 
   InterviewWithDetails, 
@@ -15,7 +14,7 @@ export const interviewService = {
   async scheduleInterview(request: ScheduleInterviewRequest): Promise<Interview | null> {
     try {
       // Map request to interviews table structure
-      const { data, error } = await supabaseTable('interviews')
+      const response = await supabaseTable('interviews')
         .insert({
           candidate_id: parseInt(request.candidate_id),
           interviewer_id: parseInt(request.interviewer_id),
@@ -26,7 +25,11 @@ export const interviewService = {
         .select()
         .single();
 
-      if (error) throw error;
+      const data = handleSingleResponse<any>(response);
+      
+      if (!data) {
+        throw new Error('Failed to insert interview');
+      }
       
       // Map DB response to Interview type
       const interview: Interview = {
@@ -66,13 +69,13 @@ export const interviewService = {
       const { data, error } = await query.order('scheduled_at', { ascending: true });
 
       if (error) throw error;
-      
+
       // Map data to InterviewWithDetails format
       const interviews: InterviewWithDetails[] = (data || []).map((interview: any) => ({
-        id: interview.interview_id.toString(),
-        candidate_id: interview.candidate_id.toString(),
-        interviewer_id: interview.interviewer_id.toString(),
-        requirement_id: interview.job_id.toString(),
+        id: interview.interview_id?.toString(),
+        candidate_id: interview.candidate_id?.toString(),
+        interviewer_id: interview.interviewer_id?.toString(),
+        requirement_id: interview.job_id?.toString(),
         scheduled_at: interview.scheduled_at,
         status: mapDBStatusToInterviewStatus(interview.status),
         feedback: interview.interviewer_notes ? { 
@@ -95,7 +98,7 @@ export const interviewService = {
 
   async getInterviewById(id: string): Promise<InterviewWithDetails | null> {
     try {
-      const { data, error } = await supabaseTable('interviews')
+      const response = await supabaseTable('interviews')
         .select(`
           *,
           candidates (name, email),
@@ -105,7 +108,11 @@ export const interviewService = {
         .eq('interview_id', parseInt(id))
         .single();
 
-      if (error) throw error;
+      const data = handleSingleResponse<any>(response);
+      
+      if (!data) {
+        throw new Error('Interview not found');
+      }
       
       // Map data to InterviewWithDetails
       const interview: InterviewWithDetails = {
@@ -187,14 +194,18 @@ export const interviewService = {
   async rescheduleInterview(id: string, newDateTime: string): Promise<boolean> {
     try {
       // Replace the RPC call with a simpler approach that works with Supabase
-      const { data: interview, error: fetchError } = await supabaseTable('interviews')
+      const response = await supabaseTable('interviews')
         .select('reschedule_count')
         .eq('interview_id', parseInt(id))
         .single();
       
-      if (fetchError) throw fetchError;
+      const interview = handleSingleResponse<any>(response);
       
-      const newCount = (interview?.reschedule_count || 0) + 1;
+      if (!interview) {
+        throw new Error('Interview not found');
+      }
+      
+      const newCount = (interview.reschedule_count || 0) + 1;
       
       const { error } = await supabaseTable('interviews')
         .update({

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { supabaseTable } from '@/utils/supabaseHelpers';
+import { supabaseTable, handleSingleResponse, handleMultipleResponse } from '@/utils/supabaseHelpers';
 
 interface DashboardSummary {
   counts: {
@@ -25,13 +25,13 @@ export const dashboardService = {
     try {
       // Fetch counts for various entities
       const [
-        { count: interviewsCount, error: interviewsError },
-        { count: interviewersCount, error: interviewersError },
-        { count: intervieweesCount, error: intervieweesError },
-        { count: organizationsCount, error: orgsError },
-        { data: pendingRequests, error: pendingError },
-        { data: upcomingInterviews, error: upcomingError },
-        { data: completedInterviews, error: completedError }
+        interviewsResponse,
+        interviewersResponse,
+        intervieweesResponse, 
+        orgsResponse,
+        pendingRequestsResponse,
+        upcomingInterviewsResponse,
+        completedInterviewsResponse
       ] = await Promise.all([
         supabaseTable('interviews').select('*', { count: 'exact', head: true }),
         supabaseTable('interviewers').select('*', { count: 'exact', head: true }),
@@ -42,20 +42,19 @@ export const dashboardService = {
         supabaseTable('interviews').select('*').eq('status', 'completed')
       ]);
 
-      if (interviewsError || interviewersError || intervieweesError || orgsError || pendingError || upcomingError || completedError) {
-        console.error('Error fetching admin dashboard data');
-        throw new Error('Failed to load dashboard data');
-      }
+      const pendingRequests = handleMultipleResponse(pendingRequestsResponse);
+      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
+      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
 
       return {
         counts: {
-          interviews: interviewsCount || 0,
-          interviewers: interviewersCount || 0,
-          interviewees: intervieweesCount || 0,
-          companies: organizationsCount || 0,
-          pendingRequests: pendingRequests?.length || 0,
-          upcomingInterviews: upcomingInterviews?.length || 0,
-          completedInterviews: completedInterviews?.length || 0
+          interviews: interviewsResponse.count || 0,
+          interviewers: interviewersResponse.count || 0,
+          interviewees: intervieweesResponse.count || 0,
+          companies: orgsResponse.count || 0,
+          pendingRequests: pendingRequests.length || 0,
+          upcomingInterviews: upcomingInterviews.length || 0,
+          completedInterviews: completedInterviews.length || 0
         }
       };
     } catch (error) {
@@ -70,16 +69,18 @@ export const dashboardService = {
   async getOrganizationDashboardData(userId: string): Promise<DashboardSummary> {
     try {
       // First get the organization ID for this user
-      const { data: orgData, error: orgError } = await supabaseTable('organizations')
+      const orgResponse = await supabaseTable('organizations')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (orgError) {
+      const orgData = handleSingleResponse<any>(orgResponse);
+
+      if (!orgData) {
         throw new Error('Failed to find organization data');
       }
 
-      const organizationId = orgData?.id;
+      const organizationId = orgData.id;
 
       if (!organizationId) {
         throw new Error('Organization ID is undefined');
@@ -87,9 +88,9 @@ export const dashboardService = {
 
       // Fetch data for this organization
       const [
-        { data: interviews, error: interviewsError },
-        { data: upcomingInterviews, error: upcomingError },
-        { data: completedInterviews, error: completedError }
+        interviewsResponse, 
+        upcomingInterviewsResponse,
+        completedInterviewsResponse
       ] = await Promise.all([
         supabaseTable('interviews').select('*').eq('organization_id', organizationId),
         supabaseTable('interviews')
@@ -103,15 +104,15 @@ export const dashboardService = {
           .eq('status', 'completed')
       ]);
 
-      if (interviewsError || upcomingError || completedError) {
-        throw new Error('Failed to load organization dashboard data');
-      }
+      const interviews = handleMultipleResponse(interviewsResponse);
+      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
+      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
 
       return {
         counts: {
-          interviews: interviews?.length || 0,
-          upcomingInterviews: upcomingInterviews?.length || 0,
-          completedInterviews: completedInterviews?.length || 0
+          interviews: interviews.length || 0,
+          upcomingInterviews: upcomingInterviews.length || 0,
+          completedInterviews: completedInterviews.length || 0
         }
       };
     } catch (error) {
@@ -126,26 +127,24 @@ export const dashboardService = {
   async getInterviewerDashboardData(userId: string): Promise<DashboardSummary> {
     try {
       // First get the interviewer ID for this user
-      const { data: interviewerData, error: interviewerError } = await supabaseTable('interviewers')
+      const interviewerResponse = await supabaseTable('interviewers')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (interviewerError) {
-        throw new Error('Failed to find interviewer data');
-      }
+      const interviewerData = handleSingleResponse<any>(interviewerResponse);
 
       if (!interviewerData) {
-        throw new Error('Interviewer data is null');
+        throw new Error('Failed to find interviewer data');
       }
 
       const interviewerId = interviewerData.id;
 
       // Fetch data for this interviewer
       const [
-        { data: upcomingInterviews, error: upcomingError },
-        { data: completedInterviews, error: completedError },
-        { data: canceledInterviews, error: canceledError }
+        upcomingInterviewsResponse,
+        completedInterviewsResponse,
+        canceledInterviewsResponse
       ] = await Promise.all([
         supabaseTable('interviews')
           .select('*')
@@ -162,16 +161,16 @@ export const dashboardService = {
           .eq('status', 'cancelled') // Fixed: changed from 'canceled' to 'cancelled'
       ]);
 
-      if (upcomingError || completedError || canceledError) {
-        throw new Error('Failed to load interviewer dashboard data');
-      }
+      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
+      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
+      const canceledInterviews = handleMultipleResponse(canceledInterviewsResponse);
 
       return {
         counts: {
-          interviews: (upcomingInterviews?.length || 0) + (completedInterviews?.length || 0) + (canceledInterviews?.length || 0),
-          upcomingInterviews: upcomingInterviews?.length || 0,
-          completedInterviews: completedInterviews?.length || 0,
-          canceledInterviews: canceledInterviews?.length || 0
+          interviews: upcomingInterviews.length + completedInterviews.length + canceledInterviews.length,
+          upcomingInterviews: upcomingInterviews.length || 0,
+          completedInterviews: completedInterviews.length || 0,
+          canceledInterviews: canceledInterviews.length || 0
         }
       };
     } catch (error) {
@@ -186,14 +185,12 @@ export const dashboardService = {
   async getIntervieweeDashboardData(userId: string): Promise<DashboardSummary> {
     try {
       // First get the interviewee ID for this user
-      const { data: intervieweeData, error: intervieweeError } = await supabaseTable('interviewees')
+      const intervieweeResponse = await supabaseTable('interviewees')
         .select('id')
         .eq('user_id', userId)
         .single();
 
-      if (intervieweeError) {
-        throw new Error('Failed to find interviewee data');
-      }
+      const intervieweeData = handleSingleResponse<any>(intervieweeResponse);
 
       if (!intervieweeData) {
         throw new Error('Interviewee data is null');
@@ -203,9 +200,9 @@ export const dashboardService = {
 
       // Fetch data for this interviewee
       const [
-        { data: upcomingInterviews, error: upcomingError },
-        { data: completedInterviews, error: completedError },
-        { data: mockInterviews, error: mockError }
+        upcomingInterviewsResponse,
+        completedInterviewsResponse,
+        mockInterviewsResponse
       ] = await Promise.all([
         supabaseTable('interviews')
           .select('*')
@@ -221,16 +218,16 @@ export const dashboardService = {
           .eq('interviewee_id', intervieweeId)
       ]);
 
-      if (upcomingError || completedError || mockError) {
-        throw new Error('Failed to load interviewee dashboard data');
-      }
+      const upcomingInterviews = handleMultipleResponse(upcomingInterviewsResponse);
+      const completedInterviews = handleMultipleResponse(completedInterviewsResponse);
+      const mockInterviews = handleMultipleResponse(mockInterviewsResponse);
 
       return {
         counts: {
-          interviews: (upcomingInterviews?.length || 0) + (completedInterviews?.length || 0),
-          upcomingInterviews: upcomingInterviews?.length || 0,
-          completedInterviews: completedInterviews?.length || 0,
-          scheduledMocks: mockInterviews?.length || 0
+          interviews: upcomingInterviews.length + completedInterviews.length,
+          upcomingInterviews: upcomingInterviews.length || 0,
+          completedInterviews: completedInterviews.length || 0,
+          scheduledMocks: mockInterviews.length || 0
         }
       };
     } catch (error) {

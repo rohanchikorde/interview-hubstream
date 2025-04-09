@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { supabaseTable } from '@/utils/supabaseHelpers';
+import { supabaseTable, handleSingleResponse, handleMultipleResponse } from '@/utils/supabaseHelpers';
 import { toast } from 'sonner';
 import { 
   Sidebar, 
@@ -58,49 +57,44 @@ const OrganizationDashboard: React.FC = () => {
       
       try {
         // Fetch organization data
-        const { data: orgData, error: orgError } = await supabaseTable('organizations')
+        const response = await supabaseTable('organizations')
           .select('*')
           .eq('user_id', user.id)
           .single();
         
-        if (orgError) {
-          console.error('Error fetching organization data:', orgError);
+        const orgData = handleSingleResponse(response);
+        
+        if (!orgData) {
           toast.error('Failed to load organization data');
           setIsLoading(false);
           return;
         }
         
         // Fetch notifications for this organization
-        const { data: notifData, error: notifError } = await supabaseTable('notifications')
+        const notifResponse = await supabaseTable('notifications')
           .select('*')
           .eq('user_id', user.id);
         
-        if (notifError) {
-          console.error('Error fetching notifications:', notifError);
-        }
+        const notifData = handleMultipleResponse<any>(notifResponse);
         
         // Set the organization data with notifications
-        if (orgData) {
-          const typedNotifications: Notification[] = Array.isArray(notifData) 
-            ? notifData.map((n: any) => ({
-                id: n.id || '',
-                message: n.message || '',
-                status: n.status || 'read'
-              }))
-            : [];
+        const typedNotifications: Notification[] = notifData.map((n: any) => ({
+            id: n.id || '',
+            message: n.message || '',
+            status: n.status || 'read'
+        }));
           
-          // Create a properly typed organization data object
-          const typedOrgData: OrganizationData = {
-            id: orgData.id || user.id,
-            name: orgData.name || user.company || 'Organization',
-            stats: orgData.stats || {},
-            user_id: user.id,
-            notifications: typedNotifications,
-            unreadNotificationsCount: typedNotifications.filter(n => n.status === 'unread').length
-          };
+        // Create a properly typed organization data object
+        const typedOrgData: OrganizationData = {
+          id: orgData.id || user.id,
+          name: orgData.name || user.company || 'Organization',
+          stats: orgData.stats || {},
+          user_id: user.id,
+          notifications: typedNotifications,
+          unreadNotificationsCount: typedNotifications.filter(n => n.status === 'unread').length
+        };
             
-          setOrganizationData(typedOrgData);
-        }
+        setOrganizationData(typedOrgData);
       } catch (error) {
         console.error('Error in fetchOrganizationData:', error);
         toast.error('An error occurred while loading data');
