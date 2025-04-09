@@ -23,6 +23,6 @@ export interface CreateTicketRequest {
 }
 
 export interface UpdateTicketRequest {
-  status: TicketStatus;
+  status?: TicketStatus;
   reason?: string;
 }

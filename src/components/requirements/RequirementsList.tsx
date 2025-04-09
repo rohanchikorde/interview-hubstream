@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Requirement, RequirementStatus } from '@/types/requirement';
 import { requirementService } from '@/services/requirementService';
@@ -48,9 +47,7 @@ const RequirementsList: React.FC = () => {
   const fetchRequirements = async () => {
     setLoading(true);
     try {
-      const data = await requirementService.getRequirements(
-        statusFilter !== 'all' ? { status: statusFilter as RequirementStatus } : undefined
-      );
+      const data = await requirementService.getRequirements();
       setRequirements(data);
     } catch (error) {
       console.error('Error fetching requirements:', error);

@@ -1,428 +1,334 @@
-import React, { useEffect, useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { supabaseTable, handleSingleResponse, handleMultipleResponse } from '@/utils/supabaseHelpers';
-import { toast } from 'sonner';
-import { 
-  Sidebar, 
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton
-} from '@/components/ui/sidebar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import React, { useState, useEffect } from 'react';
+import { dashboardService } from '@/services/dashboardService';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Image } from '@/components/ui/image';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Menu, 
-  LayoutDashboard, 
-  Calendar, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
+import { 
   Users, 
-  BarChart3, 
-  Briefcase, 
-  Bell, 
-  HelpCircle,
-  Building,
-  LogOut
+  Building2, 
+  Calendar, 
+  CheckCircle2, 
+  Clock, 
+  DollarSign,
+  PlusCircle
 } from 'lucide-react';
 
-interface Notification {
-  id: string;
-  message: string;
-  status: string;
+interface OrganizationStats {
+  totalInterviews?: number;
+  completedInterviews?: number;
+  pendingInterviews?: number;
+  totalCandidates?: number;
+  totalRequirements?: number;
+  averageScore?: number;
+  monthlyData?: {
+    month: string;
+    interviews: number;
+  }[];
+  statusDistribution?: {
+    name: string;
+    value: number;
+  }[];
 }
 
-interface OrganizationData {
+interface Organization {
   id: string;
   name: string;
-  stats: any;
-  user_id: string;
-  notifications: Notification[];
-  unreadNotificationsCount: number;
+  stats: OrganizationStats;
 }
 
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
 const OrganizationDashboard: React.FC = () => {
-  const location = useLocation();
-  const { logout, user } = useAuth();
-  const [organizationData, setOrganizationData] = useState<OrganizationData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchOrganizationData = async () => {
-      if (!user) return;
-      
-      try {
-        // Fetch organization data
-        const response = await supabaseTable('organizations')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        
-        const orgData = handleSingleResponse(response);
-        
-        if (!orgData) {
-          toast.error('Failed to load organization data');
-          setIsLoading(false);
-          return;
-        }
-        
-        // Fetch notifications for this organization
-        const notifResponse = await supabaseTable('notifications')
-          .select('*')
-          .eq('user_id', user.id);
-        
-        const notifData = handleMultipleResponse<any>(notifResponse);
-        
-        // Set the organization data with notifications
-        const typedNotifications: Notification[] = notifData.map((n: any) => ({
-            id: n.id || '',
-            message: n.message || '',
-            status: n.status || 'read'
-        }));
-          
-        // Create a properly typed organization data object
-        const typedOrgData: OrganizationData = {
-          id: orgData.id || user.id,
-          name: orgData.name || user.company || 'Organization',
-          stats: orgData.stats || {},
-          user_id: user.id,
-          notifications: typedNotifications,
-          unreadNotificationsCount: typedNotifications.filter(n => n.status === 'unread').length
-        };
-            
-        setOrganizationData(typedOrgData);
-      } catch (error) {
-        console.error('Error in fetchOrganizationData:', error);
-        toast.error('An error occurred while loading data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchOrganizationData();
-    
-    // Subscribe to notifications updates
-    const channel = supabase
-      .channel('organization-changes')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user?.id}` }, 
-        (payload) => {
-          setOrganizationData(prevData => {
-            if (!prevData) return prevData;
-            
-            const newNotification = {
-              id: (payload.new as any).id || '',
-              message: (payload.new as any).message || '',
-              status: (payload.new as any).status || 'unread'
-            };
-            
-            return {
-              ...prevData,
-              notifications: [...prevData.notifications, newNotification],
-              unreadNotificationsCount: prevData.unreadNotificationsCount + 1
-            };
-          });
-          
-          toast.info('You have a new notification');
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  }, []);
 
-  const handleLogout = async () => {
+  const fetchOrganizationData = async () => {
+    setLoading(true);
     try {
-      await logout();
-      toast.success('Logged out successfully');
+      const org = await dashboardService.getOrganization();
+      if (org) {
+        setOrganization({
+          id: org.id || '',
+          name: org.name || '',
+          stats: org.stats || {},
+        });
+      }
     } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Failed to log out. Please try again.');
+      console.error('Error fetching organization data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center h-[60vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-intervue-600"></div>
       </div>
     );
   }
 
-  
+  if (!organization) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-2">Organization Not Found</h2>
+        <p className="mb-6 text-gray-600">We couldn't find your organization data.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
-      {/* Desktop Sidebar */}
-      <Sidebar className="hidden lg:flex border-r border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col h-full">
-          <div className="py-6 px-7 flex items-center space-x-3">
-            <Building className="h-6 w-6 text-purple-600" />
-            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              {organizationData?.name || 'Organization'}
-            </h2>
-          </div>
-          
-          <div className="pt-2 pb-4 px-5">
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium text-purple-700 dark:text-purple-400">
-                  {user?.name}
-                </span>
-                <p className="text-xs mt-1">Organization Portal</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex-1 py-4">
-            <nav className="space-y-1 px-4">
-              <Link
-                to="/organization/interviews"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                  (location.pathname === '/organization' || location.pathname === '/organization/interviews') &&
-                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                )}
-              >
-                <Calendar className="h-4 w-4" />
-                Interviews
-              </Link>
-              <Link
-                to="/organization/interviewers"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                  location.pathname === '/organization/interviewers' &&
-                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                )}
-              >
-                <Users className="h-4 w-4" />
-                Interviewers
-              </Link>
-              <Link
-                to="/organization/analytics"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                  location.pathname === '/organization/analytics' &&
-                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                )}
-              >
-                <BarChart3 className="h-4 w-4" />
-                Analytics
-              </Link>
-              <Link
-                to="/organization/positions"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                  location.pathname === '/organization/positions' &&
-                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                )}
-              >
-                <Briefcase className="h-4 w-4" />
-                Positions
-              </Link>
-              <Link
-                to="/organization/notifications"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                  location.pathname === '/organization/notifications' &&
-                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                )}
-              >
-                <Bell className="h-4 w-4" />
-                Notifications
-                {organizationData?.notifications?.filter(n => n.status === 'unread').length > 0 && (
-                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {organizationData.notifications.filter(n => n.status === 'unread').length}
-                  </span>
-                )}
-              </Link>
-              <Link
-                to="/organization/support"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                  location.pathname === '/organization/support' &&
-                    "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                )}
-              >
-                <HelpCircle className="h-4 w-4" />
-                Contact Support
-              </Link>
-            </nav>
-          </div>
-          
-          <div className="py-4 px-6">
-            <Button
-              variant="outline"
-              className="w-full justify-start hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400 transition-colors"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">{organization.name} Dashboard</h1>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/dashboard/requirements/new')}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Requirement
+          </Button>
         </div>
-      </Sidebar>
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b shrink-0 bg-white dark:bg-gray-950 sm:px-6 shadow-sm">
-          <div className="flex items-center gap-4 lg:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="flex flex-col p-0">
-                <div className="p-6 flex items-center space-x-2">
-                  <Building className="h-6 w-6 text-purple-600" />
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                    {organizationData?.name || 'Organization'}
-                  </h2>
+      </div>
+
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="interviews">Interviews</TabsTrigger>
+          <TabsTrigger value="requirements">Requirements</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{organization.stats.totalInterviews || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {organization.stats.pendingInterviews || 0} pending
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Completed Interviews</CardTitle>
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{organization.stats.completedInterviews || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {organization.stats.totalInterviews ? 
+                    Math.round((organization.stats.completedInterviews || 0) / organization.stats.totalInterviews * 100) : 0}% completion rate
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Candidates</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{organization.stats.totalCandidates || 0}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Requirements</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{organization.stats.totalRequirements || 0}</div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Interview Status</CardTitle>
+                <CardDescription>Distribution of interview statuses</CardDescription>
+              </CardHeader>
+              <CardContent className="pl-2">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={organization.stats.statusDistribution || []}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {(organization.stats.statusDistribution || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="px-5 pb-4">
-                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <span className="font-medium text-purple-700 dark:text-purple-400">
-                        {user?.name}
-                      </span>
-                      <p className="text-xs mt-1">Organization Portal</p>
-                    </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Interviews</CardTitle>
+                <CardDescription>Number of interviews per month</CardDescription>
+              </CardHeader>
+              <CardContent className="pl-2">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={organization.stats.monthlyData || []}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="interviews" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="interviews" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Interview Analytics</CardTitle>
+              <CardDescription>Detailed interview statistics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {organization.stats.averageScore ? organization.stats.averageScore.toFixed(1) : 'N/A'}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Out of 10</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pending Interviews</CardTitle>
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{organization.stats.pendingInterviews || 0}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Completed Interviews</CardTitle>
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{organization.stats.completedInterviews || 0}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Recent Activity</h3>
+                  <p className="text-sm text-muted-foreground">No recent interview activity to display.</p>
+                  <Button variant="outline" onClick={() => navigate('/dashboard/interviews')}>
+                    View All Interviews
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="requirements" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Requirements Overview</CardTitle>
+              <CardDescription>Status of your job requirements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Requirements</CardTitle>
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{organization.stats.totalRequirements || 0}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Requirements</CardTitle>
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {organization.stats.totalRequirements ? Math.round(organization.stats.totalRequirements * 0.7) : 0}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {organization.stats.totalRequirements ? 
+                          Math.round(0.7 * 100) : 0}% of total
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Requirements Management</h3>
+                  <p className="text-sm text-muted-foreground">Manage your job requirements and positions.</p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => navigate('/dashboard/requirements/new')}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      New Requirement
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate('/dashboard/requirements')}>
+                      View All Requirements
+                    </Button>
                   </div>
                 </div>
-                <nav className="grid gap-2 px-2 py-4">
-                  <Link
-                    to="/organization/interviews"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                      (location.pathname === '/organization' || location.pathname === '/organization/interviews') &&
-                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                    )}
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Interviews
-                  </Link>
-                  <Link
-                    to="/organization/interviewers"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                      location.pathname === '/organization/interviewers' &&
-                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                    )}
-                  >
-                    <Users className="h-4 w-4" />
-                    Interviewers
-                  </Link>
-                  <Link
-                    to="/organization/analytics"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                      location.pathname === '/organization/analytics' &&
-                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                    )}
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    Analytics
-                  </Link>
-                  <Link
-                    to="/organization/positions"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                      location.pathname === '/organization/positions' &&
-                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                    )}
-                  >
-                    <Briefcase className="h-4 w-4" />
-                    Positions
-                  </Link>
-                  <Link
-                    to="/organization/notifications"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                      location.pathname === '/organization/notifications' &&
-                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                    )}
-                  >
-                    <Bell className="h-4 w-4" />
-                    Notifications
-                    {organizationData?.notifications?.filter(n => n.status === 'unread').length > 0 && (
-                      <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {organizationData.notifications.filter(n => n.status === 'unread').length}
-                      </span>
-                    )}
-                  </Link>
-                  <Link
-                    to="/organization/support"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400",
-                      location.pathname === '/organization/support' &&
-                        "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-                    )}
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Contact Support
-                  </Link>
-                  <Link
-                    to="/"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 dark:text-gray-400 transition-all hover:text-purple-600 dark:hover:text-purple-400"
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Switch to Admin
-                  </Link>
-                </nav>
-              </SheetContent>
-            </Sheet>
-            <Link to="/" className="flex items-center gap-2 lg:hidden">
-              <Building className="h-5 w-5 text-purple-600" />
-              <span className="font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                {organizationData?.name || 'Organization'}
-              </span>
-            </Link>
-          </div>
-          {/* Company Name */}
-          <div className="flex-1 flex justify-center lg:justify-start">
-            <h1 className="text-lg font-semibold text-gray-700 dark:text-gray-200 hidden lg:block">
-              {organizationData?.name} Client Portal
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/organization/notifications" className="relative">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                {organizationData?.unreadNotificationsCount > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {organizationData.unreadNotificationsCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout} 
-              className="text-gray-500 hover:text-red-500"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-            
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-medium">
-              {user?.name?.charAt(0) || 'U'}
-            </div>
-          </div>
-        </header>
-        
-        <main className="flex-1 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

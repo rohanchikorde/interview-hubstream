@@ -18,8 +18,6 @@ type TableName = KnownTableName | CustomTableName;
  * @returns A query builder for the specified table
  */
 export const supabaseTable = (tableName: TableName) => {
-  // Cast to any to bypass TypeScript's strict checking
-  // This allows us to use table names that might not be in the schema
   return supabase.from(tableName as any);
 };
 
@@ -44,7 +42,7 @@ export const handleSingleResponse = <T>(response: PostgrestSingleResponse<any>):
     return null;
   }
   
-  return response.data as T;
+  return (response.data as any) as T;
 };
 
 /**
@@ -59,5 +57,5 @@ export const handleMultipleResponse = <T>(response: { data: any; error: Postgres
     return [];
   }
   
-  return (response.data || []) as T[];
+  return ((response.data || []) as any) as T[];
 };

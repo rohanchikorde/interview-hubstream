@@ -1,24 +1,18 @@
 
 import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
-import { Requirement } from "@/types/requirement";
+import { Requirement, RequirementStatus, CreateRequirementRequest, UpdateRequirementRequest } from "@/types/requirement";
 import { toast } from "sonner";
 
 export const requirementService = {
-  async createRequirement(requirementData: {
-    title: string;
-    description: string;
-    companyId: string;
-    skillsRequired: string[];
-    positionsOpen: number;
-  }): Promise<Requirement | null> {
+  async createRequirement(requirementData: CreateRequirementRequest): Promise<Requirement | null> {
     try {
       const { data, error } = await supabaseTable('jobs')
         .insert({
           title: requirementData.title,
           description: requirementData.description,
-          company_id: parseInt(requirementData.companyId),
-          skills_required: requirementData.skillsRequired,
-          positions_open: requirementData.positionsOpen,
+          company_id: parseInt(requirementData.company_id),
+          skills_required: requirementData.skills,
+          positions_open: requirementData.number_of_positions,
           status: 'open',
         })
         .select()
@@ -31,12 +25,14 @@ export const requirementService = {
         id: data.job_id.toString(),
         title: data.title,
         description: data.description,
-        positionsOpen: data.positions_open,
-        skillsRequired: data.skills_required || [],
+        number_of_positions: data.positions_open,
+        skills: data.skills_required || [],
+        years_of_experience: requirementData.years_of_experience,
+        price_per_interview: requirementData.price_per_interview,
         status: data.status,
-        companyId: data.company_id?.toString() || '',
-        createdAt: data.created_at,
-        updatedAt: data.created_at,
+        company_id: data.company_id?.toString() || '',
+        created_at: data.created_at,
+        updated_at: data.created_at,
       };
 
       return requirement;
@@ -46,11 +42,16 @@ export const requirementService = {
     }
   },
 
-  async getRequirements(): Promise<Requirement[]> {
+  async getRequirements(filters?: { status?: RequirementStatus }): Promise<Requirement[]> {
     try {
-      const response = await supabaseTable('jobs')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabaseTable('jobs').select('*');
+      
+      // Apply filters if provided
+      if (filters?.status) {
+        query = query.eq('status', filters.status.toLowerCase());
+      }
+      
+      const response = await query.order('created_at', { ascending: false });
 
       const data = handleMultipleResponse<any>(response);
       
@@ -59,14 +60,15 @@ export const requirementService = {
         id: job.job_id.toString(),
         title: job.title,
         description: job.description,
-        positionsOpen: job.positions_open,
-        skillsRequired: job.skills_required || [],
-        // Add status field from DB if not already mapped
-        status: job.status || 'open',
-        // Add additional fields as needed
-        companyId: job.company_id?.toString() || '',
-        createdAt: job.created_at,
-        updatedAt: job.created_at,
+        number_of_positions: job.positions_open,
+        skills: job.skills_required || [],
+        years_of_experience: job.years_of_experience || 0,
+        price_per_interview: job.price_per_interview || 0,
+        status: job.status,
+        company_id: job.company_id?.toString() || '',
+        raised_by: job.raised_by,
+        created_at: job.created_at,
+        updated_at: job.created_at,
       }));
       
       return requirements;
@@ -94,14 +96,15 @@ export const requirementService = {
         id: job.job_id.toString(),
         title: job.title,
         description: job.description,
-        positionsOpen: job.positions_open,
-        skillsRequired: job.skills_required || [],
-        // Add status field from DB
+        number_of_positions: job.positions_open,
+        skills: job.skills_required || [],
+        years_of_experience: job.years_of_experience || 0,
+        price_per_interview: job.price_per_interview || 0,
         status: job.status,
-        raisedBy: job.raised_by,
-        companyId: job.company_id?.toString() || '',
-        createdAt: job.created_at,
-        updatedAt: job.created_at,
+        raised_by: job.raised_by,
+        company_id: job.company_id?.toString() || '',
+        created_at: job.created_at,
+        updated_at: job.updated_at || job.created_at,
       };
       
       return requirement;
@@ -114,18 +117,21 @@ export const requirementService = {
   async updateRequirement(id: string, updates: Partial<Requirement>): Promise<boolean> {
     try {
       // Convert our frontend model to DB model
-      const dbUpdates: any = {
-        ...(updates.title && { title: updates.title }),
-        ...(updates.description && { description: updates.description }),
-        ...(updates.positionsOpen && { positions_open: updates.positionsOpen }),
-        ...(updates.skillsRequired && { skills_required: updates.skillsRequired }),
-        ...(updates.status && { status: updates.status }),
-        updated_at: new Date().toISOString()
-      };
+      const dbUpdates: any = {};
       
-      if (updates.companyId) {
-        dbUpdates.company_id = parseInt(updates.companyId);
+      if (updates.title) dbUpdates.title = updates.title;
+      if (updates.description) dbUpdates.description = updates.description;
+      if (updates.number_of_positions) dbUpdates.positions_open = updates.number_of_positions;
+      if (updates.skills) dbUpdates.skills_required = updates.skills;
+      if (updates.status) dbUpdates.status = updates.status;
+      if (updates.years_of_experience) dbUpdates.years_of_experience = updates.years_of_experience;
+      if (updates.price_per_interview) dbUpdates.price_per_interview = updates.price_per_interview;
+      
+      if (updates.company_id) {
+        dbUpdates.company_id = parseInt(updates.company_id);
       }
+      
+      dbUpdates.updated_at = new Date().toISOString();
       
       const { error } = await supabaseTable('jobs')
         .update(dbUpdates)
@@ -135,6 +141,23 @@ export const requirementService = {
       return true;
     } catch (error: any) {
       toast.error(`Failed to update requirement: ${error.message}`);
+      return false;
+    }
+  },
+
+  async closeRequirement(id: string, status: 'Fulfilled' | 'Canceled'): Promise<boolean> {
+    try {
+      const { error } = await supabaseTable('jobs')
+        .update({ 
+          status: status.toLowerCase(), 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('job_id', parseInt(id));
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      toast.error(`Failed to close requirement: ${error.message}`);
       return false;
     }
   },

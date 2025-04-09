@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { interviewService } from '@/services/interviewService';
@@ -84,7 +83,7 @@ const ScheduleInterview: React.FC = () => {
     setLoading(true);
     try {
       const [requirementsData, candidatesData, interviewersData] = await Promise.all([
-        requirementService.getRequirements({ status: 'Approved' }),
+        requirementService.getRequirements(),
         fetchCandidates(),
         fetchInterviewers(),
       ]);

@@ -12,7 +12,7 @@ export interface Requirement {
   years_of_experience: number;
   price_per_interview: number;
   status: RequirementStatus;
-  raised_by: string;
+  raised_by?: string;
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -36,4 +36,5 @@ export interface UpdateRequirementRequest {
   years_of_experience?: number;
   price_per_interview?: number;
   status?: RequirementStatus;
+  company_id?: string;
 }

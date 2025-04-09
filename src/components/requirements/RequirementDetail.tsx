@@ -82,10 +82,13 @@ const RequirementDetail: React.FC = () => {
     if (!requirement || !id) return;
     
     try {
-      const updated = await requirementService.updateRequirement(id, { status });
-      if (updated) {
-        setRequirement(updated);
-        toast.success(`Requirement status updated to ${status}`);
+      const success = await requirementService.updateRequirement(id, { status });
+      if (success) {
+        const updatedRequirement = await requirementService.getRequirementById(id);
+        if (updatedRequirement) {
+          setRequirement(updatedRequirement);
+          toast.success(`Requirement status updated to ${status}`);
+        }
       }
     } catch (error) {
       console.error('Error updating requirement status:', error);
