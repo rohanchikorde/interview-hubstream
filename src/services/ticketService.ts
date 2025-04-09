@@ -13,14 +13,14 @@ export const ticketService = {
         `)
         .order('created_at', { ascending: false });
 
-      const data = handleMultipleResponse<any>(response);
+      const tickets = handleMultipleResponse<any>(response);
 
       // Map the data to our frontend types
-      const tickets: TicketWithDetails[] = data.map(ticket => ({
+      const mappedTickets: TicketWithDetails[] = tickets.map(ticket => ({
         id: ticket.ticket_id.toString(),
         status: ticket.status,
         raised_by: ticket.user_id?.toString() || '',
-        requirement_id: ticket.requirement_id || '',
+        requirement_id: ticket.requirement_id?.toString() || '',
         company_id: ticket.company_id?.toString() || '',
         created_at: ticket.created_at,
         updated_at: ticket.updated_at || ticket.created_at,
@@ -28,7 +28,7 @@ export const ticketService = {
         requirement_title: ticket.subject || '',
       }));
       
-      return tickets;
+      return mappedTickets;
     } catch (error: any) {
       toast.error(`Failed to fetch tickets: ${error.message}`);
       return [];
@@ -45,26 +45,26 @@ export const ticketService = {
         .eq('ticket_id', id)
         .single();
 
-      const data = handleSingleResponse<any>(response);
+      const ticket = handleSingleResponse<any>(response);
       
-      if (!data) {
+      if (!ticket) {
         return null;
       }
       
       // Map the data to our frontend types
-      const ticket: TicketWithDetails = {
-        id: data.ticket_id.toString(),
-        status: data.status,
-        raised_by: data.user_id?.toString() || '',
-        requirement_id: data.requirement_id || '',
-        company_id: data.company_id?.toString() || '',
-        created_at: data.created_at,
-        updated_at: data.updated_at || data.created_at,
-        company_name: data.companies?.company_name || '',
-        requirement_title: data.subject || '',
+      const mappedTicket: TicketWithDetails = {
+        id: ticket.ticket_id.toString(),
+        status: ticket.status,
+        raised_by: ticket.user_id?.toString() || '',
+        requirement_id: ticket.requirement_id?.toString() || '',
+        company_id: ticket.company_id?.toString() || '',
+        created_at: ticket.created_at,
+        updated_at: ticket.updated_at || ticket.created_at,
+        company_name: ticket.companies?.company_name || '',
+        requirement_title: ticket.subject || '',
       };
       
-      return ticket;
+      return mappedTicket;
     } catch (error: any) {
       toast.error(`Failed to fetch ticket: ${error.message}`);
       return null;
@@ -85,6 +85,11 @@ export const ticketService = {
 
       if (error) throw error;
       
+      if (!data) {
+        return null;
+      }
+
+      // Map the data to our frontend types
       const ticket: Ticket = {
         id: data.ticket_id.toString(),
         status: data.status,

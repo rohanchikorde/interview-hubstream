@@ -9,7 +9,8 @@ import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
  */
 type KnownTableName = keyof Database['public']['Tables'];
 type CustomTableName = 'requirements' | 'candidates' | 'interviews_schedule' | 'tickets' | 
-  'organizations' | 'interviewees' | 'admins' | 'notifications' | 'mock_interviews' | 'demo_requests';
+  'organizations' | 'interviewees' | 'admins' | 'notifications' | 'mock_interviews' | 'demo_requests' |
+  'support_tickets';
 type TableName = KnownTableName | CustomTableName;
 
 /**
@@ -18,7 +19,7 @@ type TableName = KnownTableName | CustomTableName;
  * @returns A query builder for the specified table
  */
 export const supabaseTable = (tableName: TableName) => {
-  return supabase.from(tableName as any);
+  return supabase.from(tableName as string);
 };
 
 /**
@@ -42,7 +43,7 @@ export const handleSingleResponse = <T>(response: PostgrestSingleResponse<any>):
     return null;
   }
   
-  return (response.data as any) as T;
+  return response.data as T | null;
 };
 
 /**
@@ -57,5 +58,5 @@ export const handleMultipleResponse = <T>(response: { data: any; error: Postgres
     return [];
   }
   
-  return ((response.data || []) as any) as T[];
+  return (response.data || []) as T[];
 };

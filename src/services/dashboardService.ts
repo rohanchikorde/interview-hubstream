@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseTable, handleSingleResponse, handleMultipleResponse } from '@/utils/supabaseHelpers';
 
@@ -17,7 +16,69 @@ interface DashboardSummary {
   recentActivity?: any[];
 }
 
+interface Organization {
+  id?: string;
+  name?: string;
+  stats?: {
+    totalInterviews?: number;
+    completedInterviews?: number;
+    pendingInterviews?: number;
+    totalCandidates?: number;
+    totalRequirements?: number;
+    averageScore?: number;
+    monthlyData?: {
+      month: string;
+      interviews: number;
+    }[];
+    statusDistribution?: {
+      name: string;
+      value: number;
+    }[];
+  };
+}
+
 export const dashboardService = {
+  /**
+   * Get organization data for the current user
+   */
+  async getOrganization(): Promise<Organization | null> {
+    try {
+      // This is temporary mock data for organization dashboard
+      // In a real implementation, this would fetch from the organizations table
+      const mockOrg: Organization = {
+        id: '1',
+        name: 'Acme Corporation',
+        stats: {
+          totalInterviews: 248,
+          completedInterviews: 187,
+          pendingInterviews: 61,
+          totalCandidates: 352,
+          totalRequirements: 15,
+          averageScore: 8.2,
+          monthlyData: [
+            { month: 'Jan', interviews: 12 },
+            { month: 'Feb', interviews: 19 },
+            { month: 'Mar', interviews: 23 },
+            { month: 'Apr', interviews: 17 },
+            { month: 'May', interviews: 28 },
+            { month: 'Jun', interviews: 32 }
+          ],
+          statusDistribution: [
+            { name: 'Completed', value: 187 },
+            { name: 'Scheduled', value: 42 },
+            { name: 'Canceled', value: 14 },
+            { name: 'Pending', value: 5 }
+          ]
+        }
+      };
+      
+      return mockOrg;
+    } catch (error) {
+      console.error('Error in getOrganization:', error);
+      return null;
+    }
+  },
+
   /**
    * Get dashboard data for Admin role
    */

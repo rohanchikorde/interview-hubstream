@@ -20,6 +20,10 @@ export const requirementService = {
 
       if (error) throw error;
 
+      if (!data) {
+        return null;
+      }
+
       // Map the data to our frontend types
       const requirement: Requirement = {
         id: data.job_id.toString(),
@@ -53,10 +57,10 @@ export const requirementService = {
       
       const response = await query.order('created_at', { ascending: false });
 
-      const data = handleMultipleResponse<any>(response);
+      const jobs = handleMultipleResponse<any>(response);
       
       // Map the data to our frontend types
-      const requirements: Requirement[] = data.map(job => ({
+      const requirements: Requirement[] = jobs.map(job => ({
         id: job.job_id.toString(),
         title: job.title,
         description: job.description,
