@@ -78,7 +78,7 @@ const TicketDetail: React.FC = () => {
     setUpdating(true);
     try {
       const request: UpdateTicketRequest = { status };
-      await ticketService.updateTicketStatus(id, request);
+      await ticketService.updateTicket(id, request);
       
       // Refresh the ticket data
       await fetchTicketData(id);
@@ -96,7 +96,7 @@ const TicketDetail: React.FC = () => {
     
     setUpdating(true);
     try {
-      await ticketService.escalateTicket(id, escalationReason);
+      await ticketService.escalateTicket(id);
       
       // Refresh the ticket data
       await fetchTicketData(id);

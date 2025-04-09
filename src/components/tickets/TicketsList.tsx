@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -66,9 +65,7 @@ const TicketsList: React.FC = () => {
   const fetchTickets = async () => {
     setLoading(true);
     try {
-      const data = await ticketService.getTickets(
-        statusFilter !== 'all' ? { status: statusFilter } : undefined
-      );
+      const data = await ticketService.getTickets();
       setTickets(data);
     } catch (error) {
       console.error('Error fetching tickets:', error);

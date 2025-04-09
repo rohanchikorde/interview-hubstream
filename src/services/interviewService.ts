@@ -152,6 +152,22 @@ export const interviewService = {
     }
   },
 
+  async addInterviewFeedback(id: string, request: AddInterviewFeedbackRequest): Promise<boolean> {
+    try {
+      const { error } = await supabaseTable('interviews')
+        .update({
+          interviewer_notes: JSON.stringify(request.feedback)
+        })
+        .eq('interview_id', parseInt(id));
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      toast.error(`Failed to add interview feedback: ${error.message}`);
+      return false;
+    }
+  },
+
   async cancelInterview(id: string): Promise<boolean> {
     try {
       const { error } = await supabaseTable('interviews')
@@ -170,10 +186,15 @@ export const interviewService = {
 
   async rescheduleInterview(id: string, newDateTime: string): Promise<boolean> {
     try {
+      // Use an increment expression instead of .sql()
       const { error } = await supabaseTable('interviews')
         .update({
           scheduled_at: newDateTime,
-          reschedule_count: supabase.sql('reschedule_count + 1')
+          reschedule_count: supabase.rpc('increment', { 
+            row_id: parseInt(id), 
+            table_name: 'interviews', 
+            column_name: 'reschedule_count' 
+          })
         })
         .eq('interview_id', parseInt(id));
 

@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { PostgrestResponse } from "@supabase/supabase-js";
 
 /**
  * Extended TableName type to include both schema tables and custom tables
@@ -18,8 +17,8 @@ type TableName = KnownTableName | CustomTableName;
  * @returns A query builder for the specified table
  */
 export const supabaseTable = (tableName: TableName) => {
-  // Using any here to bypass type checking limitations
-  // when working with tables not fully represented in the Database type
+  // Cast to any to bypass TypeScript's strict checking
+  // This allows us to use table names that might not be in the schema
   return supabase.from(tableName as string) as any;
 };
 
