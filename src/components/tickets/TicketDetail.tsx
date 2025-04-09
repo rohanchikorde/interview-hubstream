@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TicketWithDetails, UpdateTicketRequest } from '@/types/ticket';
+import { TicketWithDetails, UpdateTicketRequest, TicketStatus } from '@/types/ticket';
 import { ticketService } from '@/services/ticketService';
 import { requirementService } from '@/services/requirementService';
 import { format } from 'date-fns';
@@ -72,24 +71,24 @@ const TicketDetail: React.FC = () => {
     }
   };
 
-  const handleStatusUpdate = async (status: 'Approved' | 'Hold' | 'Rejected') => {
-    if (!id) return;
+  const handleStatusUpdate = async (status: TicketStatus) => {
+  if (!id) return;
+  
+  setUpdating(true);
+  try {
+    const request: UpdateTicketRequest = { status };
+    await ticketService.updateTicket(id, request);
     
-    setUpdating(true);
-    try {
-      const request: UpdateTicketRequest = { status };
-      await ticketService.updateTicket(id, request);
-      
-      // Refresh the ticket data
-      await fetchTicketData(id);
-      toast.success(`Ticket ${status.toLowerCase()} successfully`);
-    } catch (error) {
-      console.error(`Error updating ticket status to ${status}:`, error);
-      toast.error(`Failed to ${status.toLowerCase()} ticket`);
-    } finally {
-      setUpdating(false);
-    }
-  };
+    // Refresh the ticket data
+    await fetchTicketData(id);
+    toast.success(`Ticket ${status.toLowerCase()} successfully`);
+  } catch (error) {
+    console.error(`Error updating ticket status to ${status}:`, error);
+    toast.error(`Failed to ${status.toLowerCase()} ticket`);
+  } finally {
+    setUpdating(false);
+  }
+};
 
   const handleEscalation = async () => {
     if (!id || !escalationReason.trim()) return;

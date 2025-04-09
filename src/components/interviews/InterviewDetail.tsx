@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { InterviewWithDetails, InterviewStatus, AddInterviewFeedbackRequest, InterviewFeedback } from '@/types/interview';
@@ -160,21 +159,21 @@ const InterviewDetail: React.FC = () => {
           recommendation: values.recommendation
         }
       };
-      
-      await interviewService.addInterviewFeedback(id, feedbackRequest);
-      
-      // Update local state
-      const updatedInterview = await interviewService.getInterviewById(id);
-      setInterview(updatedInterview);
-      
-      toast.success('Feedback submitted successfully');
-    } catch (error) {
-      toast.error('Failed to submit feedback');
-      console.error(error);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+    
+    await interviewService.addFeedback(id, feedbackRequest);
+    
+    // Update local state
+    const updatedInterview = await interviewService.getInterviewById(id);
+    setInterview(updatedInterview);
+    
+    toast.success('Feedback submitted successfully');
+  } catch (error) {
+    toast.error('Failed to submit feedback');
+    console.error(error);
+  } finally {
+    setIsUpdating(false);
+  }
+};
   
   if (isLoading) {
     return (

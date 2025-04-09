@@ -26,12 +26,16 @@ import { Search, Filter } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 
+// Fix the statusColors constant - use actual TicketStatus type values
 const statusColors: Record<TicketStatus, string> = {
+  'open': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+  'in_progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+  'resolved': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  'escalated': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
   'Pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
   'Hold': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
   'Approved': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  'Rejected': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  'Escalated': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+  'Rejected': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
 };
 
 const TicketsList: React.FC = () => {
@@ -116,6 +120,10 @@ const TicketsList: React.FC = () => {
                 <SelectItem value="Approved">Approved</SelectItem>
                 <SelectItem value="Rejected">Rejected</SelectItem>
                 <SelectItem value="Escalated">Escalated</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="escalated">Escalated</SelectItem>
               </SelectContent>
             </Select>
           </div>

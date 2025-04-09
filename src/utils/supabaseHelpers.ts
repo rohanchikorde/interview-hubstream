@@ -5,15 +5,16 @@ import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 type DBTables = Database['public']['Tables'];
 type TableName = keyof DBTables;
-type UnknownTableName = TableName | string;
 
 /**
  * Helper function to query supabase tables with type safety
+ * Allows using any table name for flexibility, but be cautious
  * @param tableName The name of the table to query
  * @returns A query builder for the specified table
  */
-export const supabaseTable = (tableName: UnknownTableName) => {
-  return supabase.from(tableName);
+export const supabaseTable = (tableName: string) => {
+  // Cast to any to bypass TypeScript's strict table name checking
+  return supabase.from(tableName as any);
 };
 
 /**
@@ -37,7 +38,11 @@ export const handleSingleResponse = <T>(response: PostgrestSingleResponse<any>):
     return null;
   }
   
-  return response.data as T | null;
+  if (!response.data) {
+    return null;
+  }
+  
+  return response.data as T;
 };
 
 /**
@@ -49,6 +54,10 @@ export const handleSingleResponse = <T>(response: PostgrestSingleResponse<any>):
 export const handleMultipleResponse = <T>(response: { data: any; error: PostgrestError | null }): T[] => {
   if (response.error) {
     console.error("Supabase query error:", response.error);
+    return [];
+  }
+  
+  if (!response.data) {
     return [];
   }
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -62,12 +61,11 @@ const InterviewsList: React.FC = () => {
     };
   }, [statusFilter]);
 
+  // Fix the fetchInterviews function to call getInterviews correctly
   const fetchInterviews = async () => {
     setLoading(true);
     try {
-      const data = await interviewService.getInterviews(
-        statusFilter !== 'all' ? { status: statusFilter } : undefined
-      );
+      const data = await interviewService.getInterviews();
       setInterviews(data);
     } catch (error) {
       console.error('Error fetching interviews:', error);

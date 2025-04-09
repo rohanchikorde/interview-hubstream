@@ -4,21 +4,27 @@ import { Interview, InterviewWithDetails, ScheduleInterviewRequest, AddInterview
 import { toast } from "sonner";
 
 export const interviewService = {
-  async getInterviews(): Promise<InterviewWithDetails[]> {
+  async getInterviews(filters?: { status?: InterviewStatus }): Promise<InterviewWithDetails[]> {
     try {
-      const response = await supabaseTable('interviews')
+      let query = supabaseTable('interviews_schedule')
         .select(`
           *,
           candidates (*),
           jobs (*)
-        `)
-        .order('scheduled_at', { ascending: false });
+        `);
+      
+      // Apply filters if provided
+      if (filters?.status) {
+        query = query.eq('status', filters.status.toLowerCase());
+      }
+      
+      const response = await query.order('scheduled_at', { ascending: false });
 
       const interviews = handleMultipleResponse<any>(response);
       
       // Map the data to our frontend types
       const mappedInterviews: InterviewWithDetails[] = interviews.map(interview => ({
-        id: interview.interview_id.toString(),
+        id: interview.interview_id?.toString() || '',
         candidate_id: interview.candidate_id?.toString() || '',
         interviewer_id: interview.interviewer_id?.toString() || '',
         requirement_id: interview.job_id?.toString() || '',
@@ -56,7 +62,7 @@ export const interviewService = {
       
       // Map the data to our frontend types
       const mappedInterview: InterviewWithDetails = {
-        id: interview.interview_id.toString(),
+        id: interview.interview_id?.toString() || '',
         candidate_id: interview.candidate_id?.toString() || '',
         interviewer_id: interview.interviewer_id?.toString() || '',
         requirement_id: interview.job_id?.toString() || '',
@@ -100,7 +106,7 @@ export const interviewService = {
 
       // Map the data to our frontend types
       const interview: Interview = {
-        id: data.interview_id.toString(),
+        id: data.interview_id?.toString() || '',
         candidate_id: data.candidate_id?.toString() || '',
         interviewer_id: data.interviewer_id?.toString() || '',
         requirement_id: data.job_id?.toString() || '',
@@ -138,7 +144,7 @@ export const interviewService = {
     try {
       const { error } = await supabaseTable('interviews')
         .update({ 
-          status: 'rescheduled', // Use 'rescheduled' which is a valid status in the DB
+          status: 'canceled', // Use lowercase to match DB enum
           updated_at: new Date().toISOString()
         })
         .eq('interview_id', id);
@@ -185,6 +191,7 @@ export const interviewService = {
   
   async rescheduleInterview(id: string, newDate: string): Promise<boolean> {
     try {
+      // First get the current reschedule count
       const { data, error } = await supabaseTable('interviews')
         .select('reschedule_count')
         .eq('interview_id', id)
@@ -209,5 +216,10 @@ export const interviewService = {
       toast.error(`Failed to reschedule interview: ${error.message}`);
       return false;
     }
+  },
+
+  // Add the missing method for interview feedback
+  async addInterviewFeedback(id: string, feedbackData: AddInterviewFeedbackRequest): Promise<boolean> {
+    return this.addFeedback(id, feedbackData);
   }
 };

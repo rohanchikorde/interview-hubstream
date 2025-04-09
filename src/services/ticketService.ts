@@ -17,13 +17,13 @@ export const ticketService = {
 
       // Map the data to our frontend types
       const mappedTickets: TicketWithDetails[] = tickets.map(ticket => ({
-        id: ticket.ticket_id.toString(),
+        id: ticket.ticket_id?.toString() || '',
         status: ticket.status as TicketStatus,
         raised_by: ticket.user_id?.toString() || '',
         requirement_id: ticket.requirement_id?.toString() || '',
         company_id: ticket.company_id?.toString() || '',
-        created_at: ticket.created_at,
-        updated_at: ticket.updated_at || ticket.created_at,
+        created_at: ticket.created_at || '',
+        updated_at: ticket.updated_at || ticket.created_at || '',
         company_name: ticket.companies?.company_name || '',
         requirement_title: ticket.subject || '',
       }));
@@ -53,13 +53,13 @@ export const ticketService = {
       
       // Map the data to our frontend types
       const mappedTicket: TicketWithDetails = {
-        id: ticket.ticket_id.toString(),
+        id: ticket.ticket_id?.toString() || '',
         status: ticket.status as TicketStatus,
         raised_by: ticket.user_id?.toString() || '',
         requirement_id: ticket.requirement_id?.toString() || '',
         company_id: ticket.company_id?.toString() || '',
-        created_at: ticket.created_at,
-        updated_at: ticket.updated_at || ticket.created_at,
+        created_at: ticket.created_at || '',
+        updated_at: ticket.updated_at || ticket.created_at || '',
         company_name: ticket.companies?.company_name || '',
         requirement_title: ticket.subject || '',
       };
@@ -91,13 +91,13 @@ export const ticketService = {
 
       // Map the data to our frontend types
       const ticket: Ticket = {
-        id: data.ticket_id.toString(),
+        id: data.ticket_id?.toString() || '',
         status: data.status as TicketStatus,
         raised_by: data.user_id?.toString() || '',
         requirement_id: data.requirement_id?.toString() || '',
         company_id: data.company_id?.toString() || '',
-        created_at: data.created_at,
-        updated_at: data.updated_at || data.created_at
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || data.created_at || ''
       };
       
       return ticket;
@@ -136,7 +136,7 @@ export const ticketService = {
     try {
       const { error } = await supabaseTable('support_tickets')
         .update({ 
-          status: 'in_progress',
+          status: 'escalated',
           updated_at: new Date().toISOString()
         })
         .eq('ticket_id', id);

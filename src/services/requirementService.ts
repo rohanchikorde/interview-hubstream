@@ -26,7 +26,7 @@ export const requirementService = {
 
       // Map the data to our frontend types
       const requirement: Requirement = {
-        id: data.job_id.toString(),
+        id: data.job_id?.toString() || '',
         title: data.title,
         description: data.description,
         number_of_positions: data.positions_open,
@@ -61,18 +61,18 @@ export const requirementService = {
       
       // Map the data to our frontend types
       const requirements: Requirement[] = jobsData.map(job => ({
-        id: job.job_id.toString(),
-        title: job.title,
-        description: job.description,
-        number_of_positions: job.positions_open,
+        id: job.job_id?.toString() || '',
+        title: job.title || '',
+        description: job.description || '',
+        number_of_positions: job.positions_open || 0,
         skills: job.skills_required || [],
         years_of_experience: job.years_of_experience || 0,
         price_per_interview: job.price_per_interview || 0,
-        status: job.status,
+        status: job.status || 'open',
         company_id: job.company_id?.toString() || '',
-        raised_by: job.raised_by,
-        created_at: job.created_at,
-        updated_at: job.created_at,
+        raised_by: job.raised_by || '',
+        created_at: job.created_at || '',
+        updated_at: job.updated_at || job.created_at || '',
       }));
       
       return requirements;
@@ -97,18 +97,18 @@ export const requirementService = {
       
       // Map the data to our frontend types
       const requirement: Requirement = {
-        id: job.job_id.toString(),
-        title: job.title,
-        description: job.description,
-        number_of_positions: job.positions_open,
+        id: job.job_id?.toString() || '',
+        title: job.title || '',
+        description: job.description || '',
+        number_of_positions: job.positions_open || 0,
         skills: job.skills_required || [],
         years_of_experience: job.years_of_experience || 0,
         price_per_interview: job.price_per_interview || 0,
-        status: job.status,
-        raised_by: job.raised_by,
+        status: job.status || 'open',
+        raised_by: job.raised_by || '',
         company_id: job.company_id?.toString() || '',
-        created_at: job.created_at,
-        updated_at: job.updated_at || job.created_at,
+        created_at: job.created_at || '',
+        updated_at: job.updated_at || job.created_at || '',
       };
       
       return requirement;
@@ -127,7 +127,7 @@ export const requirementService = {
       if (updates.description) dbUpdates.description = updates.description;
       if (updates.number_of_positions) dbUpdates.positions_open = updates.number_of_positions;
       if (updates.skills) dbUpdates.skills_required = updates.skills;
-      if (updates.status) dbUpdates.status = updates.status;
+      if (updates.status) dbUpdates.status = updates.status.toLowerCase();
       if (updates.years_of_experience) dbUpdates.years_of_experience = updates.years_of_experience;
       if (updates.price_per_interview) dbUpdates.price_per_interview = updates.price_per_interview;
       
