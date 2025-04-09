@@ -1,5 +1,6 @@
+
 import { supabaseTable, handleSingleResponse, handleMultipleResponse, safeGet, safeString, safeNow } from "@/utils/supabaseHelpers";
-import { Requirement } from "@/types/requirement";
+import { Requirement, RequirementStatus, CreateRequirementRequest, UpdateRequirementRequest } from "@/types/requirement";
 import { toast } from "sonner";
 
 export const requirementService = {
@@ -13,14 +14,14 @@ export const requirementService = {
         id: safeString(safeGet(requirement, 'job_id', '')),
         title: safeString(safeGet(requirement, 'title', '')),
         description: safeString(safeGet(requirement, 'description', '')),
-        positionsOpen: safeGet(requirement, 'positions_open', 0),
+        number_of_positions: safeGet(requirement, 'positions_open', 0),
         skills: safeGet(requirement, 'skills_required', []) || [],
-        interviews: [],
-        candidates: [],
-        status: safeString(safeGet(requirement, 'status', 'open')),
-        companyId: safeString(safeGet(requirement, 'company_id', '')),
-        createdAt: safeString(safeGet(requirement, 'created_at', safeNow())),
-        updatedAt: safeString(safeGet(requirement, 'created_at', safeNow())),
+        years_of_experience: safeGet(requirement, 'years_of_experience', 0),
+        price_per_interview: safeGet(requirement, 'price_per_interview', 0),
+        status: safeString(safeGet(requirement, 'status', 'Pending')) as RequirementStatus,
+        company_id: safeString(safeGet(requirement, 'company_id', '')),
+        created_at: safeString(safeGet(requirement, 'created_at', safeNow())),
+        updated_at: safeString(safeGet(requirement, 'created_at', safeNow())),
       }));
       
       return mappedRequirements;
@@ -48,14 +49,14 @@ export const requirementService = {
         id: safeString(safeGet(requirement, 'job_id', '')),
         title: safeString(safeGet(requirement, 'title', '')),
         description: safeString(safeGet(requirement, 'description', '')),
-        positionsOpen: safeGet(requirement, 'positions_open', 0),
+        number_of_positions: safeGet(requirement, 'positions_open', 0),
         skills: safeGet(requirement, 'skills_required', []) || [],
-        interviews: [],
-        candidates: [],
-        status: safeString(safeGet(requirement, 'status', 'open')),
-        companyId: safeString(safeGet(requirement, 'company_id', '')),
-        createdAt: safeString(safeGet(requirement, 'created_at', safeNow())),
-        updatedAt: safeString(safeGet(requirement, 'created_at', safeNow())),
+        years_of_experience: safeGet(requirement, 'years_of_experience', 0),
+        price_per_interview: safeGet(requirement, 'price_per_interview', 0),
+        status: safeString(safeGet(requirement, 'status', 'Pending')) as RequirementStatus,
+        company_id: safeString(safeGet(requirement, 'company_id', '')),
+        created_at: safeString(safeGet(requirement, 'created_at', safeNow())),
+        updated_at: safeString(safeGet(requirement, 'created_at', safeNow())),
       };
       
       return mappedRequirement;
@@ -65,7 +66,7 @@ export const requirementService = {
     }
   },
 
-  async createRequirement(title: string, description: string, positionsOpen: number, skillsRequired: string[], companyId: string): Promise<Requirement | null> {
+  async createRequirement(title: string, description: string, positionsOpen: number, skillsRequired: string[], companyId: string, yearsOfExperience: number = 0, pricePerInterview: number = 0): Promise<Requirement | null> {
     try {
       const { data, error } = await supabaseTable('jobs')
         .insert({
@@ -74,7 +75,9 @@ export const requirementService = {
           positions_open: positionsOpen,
           skills_required: skillsRequired,
           company_id: parseInt(companyId),
-          status: 'open'
+          years_of_experience: yearsOfExperience,
+          price_per_interview: pricePerInterview,
+          status: 'Pending'
         })
         .select()
         .single();
@@ -87,17 +90,17 @@ export const requirementService = {
 
       // Map the data to our frontend types
       const requirement: Requirement = {
-        id: String(data.job_id) || '',
-        title: data.title || '',
-        description: data.description || '',
-        positionsOpen: data.positions_open || 1,
-        skills: data.skills_required || [],
-        interviews: [],
-        candidates: [],
-        status: data.status || 'open',
-        companyId: String(data.company_id) || '',
-        createdAt: data.created_at || '',
-        updatedAt: data.created_at || ''
+        id: safeString(safeGet(data, 'job_id', '')),
+        title: safeString(safeGet(data, 'title', '')),
+        description: safeString(safeGet(data, 'description', '')),
+        number_of_positions: safeGet(data, 'positions_open', 1),
+        skills: safeGet(data, 'skills_required', []) || [],
+        years_of_experience: safeGet(data, 'years_of_experience', 0),
+        price_per_interview: safeGet(data, 'price_per_interview', 0),
+        status: safeString(safeGet(data, 'status', 'Pending')) as RequirementStatus,
+        company_id: safeString(safeGet(data, 'company_id', '')),
+        created_at: safeString(safeGet(data, 'created_at', '')),
+        updated_at: safeString(safeGet(data, 'created_at', ''))
       };
       
       return requirement;
@@ -107,15 +110,17 @@ export const requirementService = {
     }
   },
 
-  async updateRequirement(id: string, updates: Partial<Requirement>): Promise<boolean> {
+  async updateRequirement(id: string, updates: UpdateRequirementRequest): Promise<boolean> {
     try {
       const dbUpdates: any = {};
       
       if (updates.title) dbUpdates.title = updates.title;
       if (updates.description) dbUpdates.description = updates.description;
-      if (updates.positionsOpen) dbUpdates.positions_open = updates.positionsOpen;
+      if (updates.number_of_positions !== undefined) dbUpdates.positions_open = updates.number_of_positions;
       if (updates.skills) dbUpdates.skills_required = updates.skills;
       if (updates.status) dbUpdates.status = updates.status;
+      if (updates.years_of_experience !== undefined) dbUpdates.years_of_experience = updates.years_of_experience;
+      if (updates.price_per_interview !== undefined) dbUpdates.price_per_interview = updates.price_per_interview;
       
       dbUpdates.updated_at = new Date().toISOString();
       
@@ -141,6 +146,23 @@ export const requirementService = {
       return true;
     } catch (error: any) {
       toast.error(`Failed to delete requirement: ${error.message}`);
+      return false;
+    }
+  },
+  
+  async closeRequirement(id: string, status: 'Fulfilled' | 'Canceled'): Promise<boolean> {
+    try {
+      const { error } = await supabaseTable('jobs')
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('job_id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      toast.error(`Failed to close requirement: ${error.message}`);
       return false;
     }
   }

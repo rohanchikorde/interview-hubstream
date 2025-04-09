@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CreateRequirementRequest } from '@/types/requirement';
@@ -76,17 +77,16 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
       // Transform the data with Zod to ensure skills is a string[]
       const processedData = formSchema.parse(data) as ProcessedFormData;
 
-      const request: CreateRequirementRequest = {
-        title: processedData.title,
-        description: processedData.description,
-        number_of_positions: processedData.number_of_positions,
-        skills: processedData.skills, // Now this is correctly a string[]
-        years_of_experience: processedData.years_of_experience,
-        price_per_interview: processedData.price_per_interview,
-        company_id: companyId,
-      };
+      const result = await requirementService.createRequirement(
+        processedData.title,
+        processedData.description,
+        processedData.number_of_positions,
+        processedData.skills,
+        companyId,
+        processedData.years_of_experience,
+        processedData.price_per_interview
+      );
 
-      const result = await requirementService.createRequirement(request);
       if (result) {
         toast.success('Requirement created successfully');
         form.reset();

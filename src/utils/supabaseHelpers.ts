@@ -10,7 +10,7 @@ import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
  */
 export const supabaseTable = (tableName: string) => {
   // Use a type assertion to handle dynamic table names
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
 };
 
 /**
@@ -71,9 +71,9 @@ export const castResult = <T>(data: any): T | null => {
  * @param defaultValue The default value to return if the property doesn't exist
  * @returns The property value or the default value
  */
-export const safeGet = <T, K extends keyof T>(obj: T | null | undefined, key: K, defaultValue: T[K]): T[K] => {
+export const safeGet = <T, K extends keyof any>(obj: T | null | undefined, key: K, defaultValue: any): any => {
   if (!obj) return defaultValue;
-  return (obj[key] !== undefined && obj[key] !== null) ? obj[key] : defaultValue;
+  return (obj as any)[key] !== undefined && (obj as any)[key] !== null ? (obj as any)[key] : defaultValue;
 };
 
 /**

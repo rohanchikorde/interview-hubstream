@@ -6,6 +6,7 @@ export interface Candidate {
   full_name: string;
   email: string;
   resume_url?: string;
+  skills?: string[];
   status: CandidateStatus;
   requirement_id?: string;
   created_at: string;
@@ -17,6 +18,7 @@ export interface CreateCandidateRequest {
   email: string;
   resume_url?: string;
   requirement_id: string;
+  status?: CandidateStatus;
 }
 
 export interface UpdateCandidateStatus {

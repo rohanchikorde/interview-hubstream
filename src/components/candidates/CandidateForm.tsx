@@ -45,15 +45,15 @@ const CandidateForm: React.FC<CandidateFormProps> = ({ requirementId, onSuccess 
     setIsSubmitting(true);
 
     try {
-      let resumeUrl: string | undefined;
+      let resume_url: string | undefined;
       if (data.resume) {
-        resumeUrl = await candidateService.uploadResume(data.resume);
+        resume_url = await candidateService.uploadResume(data.resume);
       }
 
       const candidateData: CreateCandidateRequest = {
         full_name: data.full_name,
         email: data.email,
-        resume_url: resumeUrl,
+        resume_url,
         requirement_id: requirementId,
       };
 
