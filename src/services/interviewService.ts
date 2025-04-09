@@ -1,8 +1,6 @@
-
-import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
+import { supabaseTable, handleSingleResponse, handleMultipleResponse, safeGet, safeString, safeNow } from "@/utils/supabaseHelpers";
 import { Interview, InterviewWithDetails, ScheduleInterviewRequest, AddInterviewFeedbackRequest, UpdateInterviewStatusRequest, InterviewStatus } from "@/types/interview";
 import { toast } from "sonner";
-import { TicketStatus } from "@/types/ticket";
 
 export const interviewService = {
   async getInterviews(): Promise<InterviewWithDetails[]> {
@@ -18,16 +16,16 @@ export const interviewService = {
       
       // Map the data to our frontend types with safe access and defaults
       const mappedInterviews: InterviewWithDetails[] = interviewsData.map(interview => ({
-        id: String(interview?.interview_id) || '',
-        candidate_id: String(interview?.candidate_id) || '',
-        interviewer_id: String(interview?.interviewer_id) || '',
-        requirement_id: String(interview?.job_id) || '',
-        scheduled_at: interview?.scheduled_at || new Date().toISOString(),
-        status: (interview?.status as InterviewStatus) || 'Scheduled',
-        created_at: interview?.created_at || new Date().toISOString(),
-        updated_at: interview?.updated_at || interview?.created_at || new Date().toISOString(),
-        candidate_name: interview?.candidates?.name || '',
-        requirement_title: interview?.jobs?.title || '',
+        id: safeString(safeGet(interview, 'interview_id', '')),
+        candidate_id: safeString(safeGet(interview, 'candidate_id', '')),
+        interviewer_id: safeString(safeGet(interview, 'interviewer_id', '')),
+        requirement_id: safeString(safeGet(interview, 'job_id', '')),
+        scheduled_at: safeString(safeGet(interview, 'scheduled_at', safeNow())),
+        status: safeGet(interview, 'status', 'Scheduled') as InterviewStatus,
+        created_at: safeString(safeGet(interview, 'created_at', safeNow())),
+        updated_at: safeString(safeGet(interview, 'updated_at', safeNow())),
+        candidate_name: safeString(safeGet(interview, 'candidates.name', '')),
+        requirement_title: safeString(safeGet(interview, 'jobs.title', ''))
       }));
       
       return mappedInterviews;
@@ -56,20 +54,20 @@ export const interviewService = {
       
       // Map the data to our frontend types with safe access
       const mappedInterview: InterviewWithDetails = {
-        id: String(interview?.interview_id) || '',
-        candidate_id: String(interview?.candidate_id) || '',
-        interviewer_id: String(interview?.interviewer_id) || '',
-        requirement_id: String(interview?.job_id) || '',
-        scheduled_at: interview?.scheduled_at || new Date().toISOString(),
-        status: (interview?.status as InterviewStatus) || 'Scheduled',
-        feedback: interview?.interviewer_notes ? {
+        id: safeString(safeGet(interview, 'interview_id', '')),
+        candidate_id: safeString(safeGet(interview, 'candidate_id', '')),
+        interviewer_id: safeString(safeGet(interview, 'interviewer_id', '')),
+        requirement_id: safeString(safeGet(interview, 'job_id', '')),
+        scheduled_at: safeString(safeGet(interview, 'scheduled_at', safeNow())),
+        status: safeGet(interview, 'status', 'Scheduled') as InterviewStatus,
+        feedback: interview.interviewer_notes ? {
           rating: 0,
           comments: interview.interviewer_notes
         } : null,
-        created_at: interview?.created_at || new Date().toISOString(),
-        updated_at: interview?.updated_at || interview?.created_at || new Date().toISOString(),
-        candidate_name: interview?.candidates?.name || '',
-        requirement_title: interview?.jobs?.title || '',
+        created_at: safeString(safeGet(interview, 'created_at', safeNow())),
+        updated_at: safeString(safeGet(interview, 'updated_at', safeNow())),
+        candidate_name: safeString(safeGet(interview, 'candidates.name', '')),
+        requirement_title: safeString(safeGet(interview, 'jobs.title', '')),
       };
       
       return mappedInterview;
@@ -138,7 +136,7 @@ export const interviewService = {
     try {
       const { error } = await supabaseTable('interviews')
         .update({ 
-          status: 'canceled' as any, // Type assertion to bypass type check
+          status: 'canceled',
           updated_at: new Date().toISOString()
         })
         .eq('interview_id', id);
@@ -156,7 +154,7 @@ export const interviewService = {
       const { error } = await supabaseTable('interviews')
         .update({ 
           interviewer_notes: feedbackData.feedback.comments,
-          status: 'completed' as any, // Type assertion to bypass type check
+          status: 'completed',
           updated_at: new Date().toISOString()
         })
         .eq('interview_id', id);
@@ -192,12 +190,12 @@ export const interviewService = {
         .single();
       
       const data = handleSingleResponse<{reschedule_count?: number}>(response);
-      const rescheduleCount = data?.reschedule_count || 0;
+      const rescheduleCount = safeGet(data, 'reschedule_count', 0);
       
       const { error: updateError } = await supabaseTable('interviews')
         .update({ 
           scheduled_at: newDate,
-          status: 'rescheduled' as any, // Type assertion to bypass type check
+          status: 'rescheduled',
           reschedule_count: rescheduleCount + 1,
           updated_at: new Date().toISOString()
         })
@@ -211,7 +209,7 @@ export const interviewService = {
     }
   },
 
-  // Add the feedback method that was missing
+  // Add the feedback method
   async addInterviewFeedback(id: string, feedbackData: AddInterviewFeedbackRequest): Promise<boolean> {
     return this.addFeedback(id, feedbackData);
   }

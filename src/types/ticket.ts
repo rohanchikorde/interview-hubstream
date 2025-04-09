@@ -1,7 +1,7 @@
 
 import { Json } from "@/integrations/supabase/types";
 
-export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'escalated';
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'escalated' | 'pending' | 'hold' | 'approved' | 'rejected';
 
 export interface Ticket {
   id: string;

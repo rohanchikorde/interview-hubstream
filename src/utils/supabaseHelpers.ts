@@ -63,3 +63,34 @@ export const castResult = <T>(data: any): T | null => {
   }
   return data as T;
 };
+
+/**
+ * Safely access a property on an object that might be undefined
+ * @param obj The object to access a property from
+ * @param key The key of the property to access
+ * @param defaultValue The default value to return if the property doesn't exist
+ * @returns The property value or the default value
+ */
+export const safeGet = <T, K extends keyof T>(obj: T | null | undefined, key: K, defaultValue: T[K]): T[K] => {
+  if (!obj) return defaultValue;
+  return (obj[key] !== undefined && obj[key] !== null) ? obj[key] : defaultValue;
+};
+
+/**
+ * Safely convert a value to string
+ * @param value The value to convert to string
+ * @param defaultValue The default value to use if conversion fails
+ * @returns The string representation of the value or the default value
+ */
+export const safeString = (value: any, defaultValue: string = ''): string => {
+  if (value === null || value === undefined) return defaultValue;
+  return String(value);
+};
+
+/**
+ * Helper function to safely get the current ISO date string
+ * @returns Current date in ISO format string
+ */
+export const safeNow = (): string => {
+  return new Date().toISOString();
+};

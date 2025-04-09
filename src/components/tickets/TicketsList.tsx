@@ -29,10 +29,10 @@ const statusColors: Record<TicketStatus, string> = {
   'in_progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
   'resolved': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
   'escalated': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  'Pending': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
-  'Hold': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  'Approved': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300',
-  'Rejected': 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300'
+  'pending': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
+  'hold': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+  'approved': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300',
+  'rejected': 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300'
 };
 
 const TicketsList: React.FC = () => {
@@ -97,10 +97,10 @@ const TicketsList: React.FC = () => {
                 <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="resolved">Resolved</SelectItem>
                 <SelectItem value="escalated">Escalated</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Hold">Hold</SelectItem>
-                <SelectItem value="Approved">Approved</SelectItem>
-                <SelectItem value="Rejected">Rejected</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="hold">Hold</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
           </div>

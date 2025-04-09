@@ -1,5 +1,5 @@
 
-import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
+import { supabaseTable, handleSingleResponse, handleMultipleResponse, safeGet, safeString, safeNow } from "@/utils/supabaseHelpers";
 import { Ticket, TicketWithDetails, CreateTicketRequest, UpdateTicketRequest, TicketStatus } from "@/types/ticket";
 import { toast } from "sonner";
 
@@ -17,15 +17,15 @@ export const ticketService = {
 
       // Map the data to our frontend types with safe access
       const mappedTickets: TicketWithDetails[] = tickets.map(ticket => ({
-        id: String(ticket?.ticket_id) || '',
-        status: ticket?.status as TicketStatus || 'open',
-        raised_by: String(ticket?.user_id) || '',
-        requirement_id: String(ticket?.requirement_id) || '',
-        company_id: String(ticket?.company_id) || '',
-        created_at: ticket?.created_at || new Date().toISOString(),
-        updated_at: ticket?.updated_at || ticket?.created_at || new Date().toISOString(),
-        company_name: ticket?.companies?.company_name || '',
-        requirement_title: ticket?.subject || '',
+        id: safeString(safeGet(ticket, 'ticket_id', '')),
+        status: safeString(safeGet(ticket, 'status', 'open')) as TicketStatus,
+        raised_by: safeString(safeGet(ticket, 'user_id', '')),
+        requirement_id: safeString(safeGet(ticket, 'requirement_id', '')),
+        company_id: safeString(safeGet(ticket, 'company_id', '')),
+        created_at: safeString(safeGet(ticket, 'created_at', safeNow())),
+        updated_at: safeString(safeGet(ticket, 'updated_at', safeGet(ticket, 'created_at', safeNow()))),
+        company_name: safeString(safeGet(ticket, 'companies.company_name', '')),
+        requirement_title: safeString(safeGet(ticket, 'subject', '')),
       }));
       
       return mappedTickets;
@@ -53,15 +53,15 @@ export const ticketService = {
       
       // Map the data to our frontend types with safe access
       const mappedTicket: TicketWithDetails = {
-        id: String(ticket?.ticket_id) || '',
-        status: ticket?.status as TicketStatus || 'open',
-        raised_by: String(ticket?.user_id) || '',
-        requirement_id: String(ticket?.requirement_id) || '',
-        company_id: String(ticket?.company_id) || '',
-        created_at: ticket?.created_at || new Date().toISOString(),
-        updated_at: ticket?.updated_at || ticket?.created_at || new Date().toISOString(),
-        company_name: ticket?.companies?.company_name || '',
-        requirement_title: ticket?.subject || '',
+        id: safeString(safeGet(ticket, 'ticket_id', '')),
+        status: safeString(safeGet(ticket, 'status', 'open')) as TicketStatus,
+        raised_by: safeString(safeGet(ticket, 'user_id', '')),
+        requirement_id: safeString(safeGet(ticket, 'requirement_id', '')),
+        company_id: safeString(safeGet(ticket, 'company_id', '')),
+        created_at: safeString(safeGet(ticket, 'created_at', safeNow())),
+        updated_at: safeString(safeGet(ticket, 'updated_at', safeGet(ticket, 'created_at', safeNow()))),
+        company_name: safeString(safeGet(ticket, 'companies.company_name', '')),
+        requirement_title: safeString(safeGet(ticket, 'subject', '')),
       };
       
       return mappedTicket;
@@ -136,7 +136,7 @@ export const ticketService = {
     try {
       const { error } = await supabaseTable('support_tickets')
         .update({ 
-          status: 'escalated' as any, // Type assertion to bypass type check
+          status: 'escalated',
           updated_at: new Date().toISOString()
         })
         .eq('ticket_id', id);

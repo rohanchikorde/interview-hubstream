@@ -1,100 +1,42 @@
-
-import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Candidate, 
-  CreateCandidateRequest, 
-  UpdateCandidateStatus,
-  CandidateStatus 
-} from "@/types/candidate";
+import { supabaseTable, handleSingleResponse, handleMultipleResponse, safeGet, safeString, safeNow, castResult } from "@/utils/supabaseHelpers";
+import { Candidate } from "@/types/candidate";
 import { toast } from "sonner";
 
+// Define the candidate service with proper error handling and type safety
 export const candidateService = {
-  async createCandidate(request: CreateCandidateRequest): Promise<Candidate | null> {
+  async getCandidates(): Promise<Candidate[]> {
     try {
-      const { data, error } = await supabaseTable('candidates')
-        .insert({
-          name: request.full_name,  // Map full_name to name field in the DB
-          email: request.email,
-          resume_url: request.resume_url,
-          // requirement_id field is not supported in the DB schema, it will be ignored
-          // It will be handled at the application level
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const response = await supabaseTable('candidates').select('*');
+      const candidates = handleMultipleResponse<any>(response);
       
-      if (!data) {
-        return null;
-      }
-      
-      // Map the database response to our application type
-      const candidate: Candidate = {
-        id: String(data.candidate_id) || '',
-        full_name: data.name || '',
-        email: data.email || '',
-        resume_url: data.resume_url,
-        status: 'New',
-        requirement_id: request.requirement_id,
-        created_at: data.created_at || new Date().toISOString(),
-        updated_at: data.created_at || new Date().toISOString()
-      };
-      
-      return candidate;
-    } catch (error: any) {
-      toast.error(`Failed to create candidate: ${error.message}`);
-      return null;
-    }
-  },
-
-  async getCandidatesByRequirement(requirementId: string): Promise<Candidate[]> {
-    try {
-      // Since requirement_id doesn't exist in the DB schema, we'll need to adapt
-      // This is a simplified version - in a real app, you might need to use a join or custom query
-      const { data, error } = await supabaseTable('candidates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Filter candidates by requirement at application level
-      // In a real app, you would have a relation table or a proper foreign key
-      const filteredCandidates = (data || []).filter((candidate: any) => {
-        // This is a placeholder for a proper relationship check
-        return true; // In a real app, check if candidate is related to requirementId
-      });
-      
-      // Map the database response to our application type
-      const candidates: Candidate[] = filteredCandidates.map((item: any) => ({
-        id: String(item.candidate_id) || '',
-        full_name: item.name || '',
-        email: item.email || '',
-        resume_url: item.resume_url,
-        status: 'New',
-        requirement_id: requirementId,
-        created_at: item.created_at || new Date().toISOString(),
-        updated_at: item.created_at || new Date().toISOString()
+      // Map the data to our frontend types with safe access
+      const mappedCandidates: Candidate[] = candidates.map(candidate => ({
+        id: safeString(safeGet(candidate, 'candidate_id', '')),
+        name: safeString(safeGet(candidate, 'name', '')),
+        email: safeString(safeGet(candidate, 'email', '')),
+        resumeUrl: safeString(safeGet(candidate, 'resume_url', '')),
+        skills: [],
+        status: 'New', // Default status
+        createdAt: safeString(safeGet(candidate, 'created_at', safeNow())),
+        updatedAt: safeString(safeGet(candidate, 'created_at', safeNow()))
       }));
       
-      return candidates;
+      return mappedCandidates;
     } catch (error: any) {
       toast.error(`Failed to fetch candidates: ${error.message}`);
       return [];
     }
   },
-
-  async updateCandidateStatus(id: string, status: CandidateStatus): Promise<Candidate | null> {
+  
+  async createCandidate(candidate: Omit<Candidate, 'id'>): Promise<Candidate | null> {
     try {
-      // Since 'status' might not be a field in the candidate table in the DB schema,
-      // we're using a simplified approach here
       const { data, error } = await supabaseTable('candidates')
-        .update({ 
-          // Store status in a way compatible with the DB schema
-          // This assumes there's some way to represent status in the DB
-          // Alternatively, you might need to use a separate table
+        .insert({
+          name: candidate.name,
+          email: candidate.email,
+          resume_url: candidate.resumeUrl,
+          created_at: new Date().toISOString(),
         })
-        .eq('candidate_id', id)
         .select()
         .single();
 
@@ -103,65 +45,88 @@ export const candidateService = {
       if (!data) {
         return null;
       }
-      
-      // Map the database response to our application type
-      const candidate: Candidate = {
+
+      // Map the data to our frontend types
+      const newCandidate: Candidate = {
         id: String(data.candidate_id) || '',
-        full_name: data.name || '',
+        name: data.name || '',
         email: data.email || '',
-        resume_url: data.resume_url,
-        status: status,
-        created_at: data.created_at || new Date().toISOString(),
-        updated_at: data.updated_at || new Date().toISOString()
+        resumeUrl: data.resume_url || '',
+        skills: [],
+        status: 'New',
+        createdAt: data.created_at || '',
+        updatedAt: data.created_at || ''
       };
       
-      return candidate;
+      return newCandidate;
     } catch (error: any) {
-      toast.error(`Failed to update candidate status: ${error.message}`);
+      toast.error(`Failed to create candidate: ${error.message}`);
       return null;
     }
   },
-
-  async uploadResume(file: File): Promise<string | null> {
+  
+  async updateCandidate(id: string, updates: Partial<Candidate>): Promise<boolean> {
     try {
-      const fileName = `${Date.now()}_${file.name}`;
-      const filePath = `resumes/${fileName}`;
-      
-      const { error } = await supabase.storage
-        .from('candidates')
-        .upload(filePath, file);
+      const { error } = await supabaseTable('candidates')
+        .update({
+          name: updates.name,
+          email: updates.email,
+          resume_url: updates.resumeUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('candidate_id', id);
 
       if (error) throw error;
-      
-      const { data } = supabase.storage
-        .from('candidates')
-        .getPublicUrl(filePath);
-      
-      return data.publicUrl;
+      return true;
     } catch (error: any) {
-      toast.error(`Failed to upload resume: ${error.message}`);
-      return null;
+      toast.error(`Failed to update candidate: ${error.message}`);
+      return false;
+    }
+  },
+  
+  async deleteCandidate(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabaseTable('candidates')
+        .delete()
+        .eq('candidate_id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (error: any) {
+      toast.error(`Failed to delete candidate: ${error.message}`);
+      return false;
     }
   },
 
-  async bulkCreateCandidates(candidates: CreateCandidateRequest[]): Promise<number> {
+  async getCandidateById(id: string): Promise<Candidate | null> {
     try {
-      const formattedCandidates = candidates.map(c => ({
-        name: c.full_name,  // Map full_name to name field
-        email: c.email,
-        resume_url: c.resume_url,
-        // Map other fields as needed for the DB schema
-      }));
+      const response = await supabaseTable('candidates')
+        .select('*')
+        .eq('candidate_id', id)
+        .single();
+        
+      const candidate = handleSingleResponse<any>(response);
       
-      const { data, error } = await supabaseTable('candidates')
-        .insert(formattedCandidates)
-        .select();
-
-      if (error) throw error;
-      return data?.length || 0;
+      if (!candidate) {
+        return null;
+      }
+      
+      // Map the data to our frontend types with safe access
+      const mappedCandidate: Candidate = {
+        id: safeString(safeGet(candidate, 'candidate_id', '')),
+        name: safeString(safeGet(candidate, 'name', '')),
+        email: safeString(safeGet(candidate, 'email', '')),
+        resumeUrl: safeString(safeGet(candidate, 'resume_url', '')),
+        skills: [],
+        status: 'New', // Default status
+        createdAt: safeString(safeGet(candidate, 'created_at', safeNow())),
+        updatedAt: safeString(safeGet(candidate, 'updated_at', safeNow()))
+      };
+      
+      return mappedCandidate;
     } catch (error: any) {
-      toast.error(`Failed to bulk create candidates: ${error.message}`);
-      return 0;
+      toast.error(`Failed to fetch candidate: ${error.message}`);
+      return null;
     }
   }
 };
