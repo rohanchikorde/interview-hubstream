@@ -41,28 +41,6 @@ const InterviewsList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchInterviews();
-
-    // Subscribe to realtime updates
-    const subscription = supabase
-      .channel('public:interviews_schedule')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'interviews_schedule'
-      }, () => {
-        fetchInterviews();
-        toast.info('Interview list updated');
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [statusFilter]);
-
-  // Fix the fetchInterviews function to call getInterviews correctly
   const fetchInterviews = async () => {
     setLoading(true);
     try {
@@ -76,11 +54,37 @@ const InterviewsList: React.FC = () => {
     }
   };
 
-  const filteredInterviews = interviews.filter(interview => 
-    (interview.candidate_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (interview.interviewer_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (interview.requirement_title?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    fetchInterviews();
+
+    // Subscribe to realtime updates
+    const interviewsChannel = supabase
+      .channel('public:interviews')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'interviews'
+      }, () => {
+        fetchInterviews();
+        toast.info('Interview list updated');
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(interviewsChannel);
+    };
+  }, [statusFilter]);
+
+  const filteredInterviews = interviews.filter(interview => {
+    const matchesSearch = 
+      (interview.candidate_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (interview.interviewer_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (interview.requirement_title?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+      
+    const matchesStatus = statusFilter === 'all' || interview.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const handleViewDetails = (id: string) => {
     navigate(`/dashboard/interviews/${id}`);

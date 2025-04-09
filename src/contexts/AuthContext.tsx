@@ -1,4 +1,3 @@
-
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -307,89 +306,159 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const role = userData.role as UserRole;
       
-      switch (role) {
-        case 'admin':
-          // Create admin user in the users table with auth_user_id
-          await supabase.from("users").insert({
+      // Update or create user in the users table with auth_user_id
+      const { data: existingUser, error: getUserError } = await supabase
+        .from("users")
+        .select("user_id")
+        .eq("auth_user_id", userId)
+        .maybeSingle();
+      
+      if (getUserError) {
+        console.error("Error checking existing user:", getUserError);
+      }
+      
+      let userId_value: number | undefined;
+      
+      if (!existingUser) {
+        // Create new user entry
+        const { data: newUser, error: createUserError } = await supabase
+          .from("users")
+          .insert({
             full_name: userData.name,
             work_email: userData.email,
             password_hash: "managed_by_supabase",
-            roles: { role: "admin" },
+            roles: { role: role },
             is_verified: true,
             auth_user_id: userId
-          });
+          })
+          .select('user_id')
+          .single();
+        
+        if (createUserError) {
+          console.error("Error creating user:", createUserError);
+          throw new Error("Failed to create user profile");
+        }
+        
+        userId_value = newUser?.user_id;
+      } else {
+        userId_value = existingUser.user_id;
+      }
+      
+      switch (role) {
+        case 'admin':
+          // We already created the admin in the users table above
           break;
           
         case 'organization':
-          // Create organization in the companies table
-          const { data: companyData } = await supabase.from("companies").insert({
-            company_name: userData.company || userData.name,
-            subscription_tier: 'basic'
-          }).select('company_id').single();
+          // Create organization in the companies table if it doesn't exist
+          const { data: existingCompany, error: getCompanyError } = await supabase
+            .from("companies")
+            .select("company_id")
+            .eq("company_name", userData.company || userData.name)
+            .maybeSingle();
           
-          // Also create entry in users table with auth_user_id
-          const { data: userData_ } = await supabase.from("users").insert({
-            full_name: userData.name,
-            work_email: userData.email,
-            password_hash: "managed_by_supabase",
-            roles: { role: "organization" },
-            is_verified: true,
-            auth_user_id: userId
-          }).select('user_id').single();
+          if (getCompanyError) {
+            console.error("Error checking existing company:", getCompanyError);
+          }
           
-          // Create company_team entry to link user to company with auth_user_id
-          if (companyData && userData_) {
-            await supabase.from("company_team").insert({
-              company_id: companyData.company_id,
-              user_id: userData_.user_id,
-              role: 'client_admin',
-              auth_user_id: userId
-            });
+          let companyId: number | undefined;
+          
+          if (!existingCompany) {
+            const { data: companyData, error: createCompanyError } = await supabase
+              .from("companies")
+              .insert({
+                company_name: userData.company || userData.name,
+                subscription_tier: 'basic'
+              })
+              .select('company_id')
+              .single();
+            
+            if (createCompanyError) {
+              console.error("Error creating company:", createCompanyError);
+              throw new Error("Failed to create company");
+            }
+            
+            companyId = companyData?.company_id;
+          } else {
+            companyId = existingCompany.company_id;
+          }
+          
+          // Create company_team entry to link user to company with auth_user_id if it doesn't exist
+          if (companyId && userId_value) {
+            const { data: existingTeamMember, error: getTeamError } = await supabase
+              .from("company_team")
+              .select("company_team_id")
+              .eq("user_id", userId_value)
+              .eq("company_id", companyId)
+              .maybeSingle();
+            
+            if (getTeamError) {
+              console.error("Error checking existing team member:", getTeamError);
+            }
+            
+            if (!existingTeamMember) {
+              await supabase
+                .from("company_team")
+                .insert({
+                  company_id: companyId,
+                  user_id: userId_value,
+                  role: 'client_admin',
+                  auth_user_id: userId
+                });
+            }
           }
           break;
           
         case 'interviewer':
-          // Create entry in users table with auth_user_id
-          const { data: interviewerUserData } = await supabase.from("users").insert({
-            full_name: userData.name,
-            work_email: userData.email,
-            password_hash: "managed_by_supabase",
-            roles: { role: "interviewer" },
-            is_verified: true,
-            auth_user_id: userId
-          }).select('user_id').single();
-          
-          // Create interviewer in the interviewers table with auth_user_id
-          if (interviewerUserData) {
-            await supabase.from("interviewers").insert({
-              user_id: interviewerUserData.user_id,
-              expertise: userData.skills ? JSON.parse(userData.skills) : [],
-              is_active: true,
-              auth_user_id: userId
-            });
+          // Create interviewer in the interviewers table with auth_user_id if it doesn't exist
+          if (userId_value) {
+            const { data: existingInterviewer, error: getInterviewerError } = await supabase
+              .from("interviewers")
+              .select("interviewer_id")
+              .eq("user_id", userId_value)
+              .maybeSingle();
+            
+            if (getInterviewerError) {
+              console.error("Error checking existing interviewer:", getInterviewerError);
+            }
+            
+            if (!existingInterviewer) {
+              await supabase
+                .from("interviewers")
+                .insert({
+                  user_id: userId_value,
+                  expertise: userData.skills ? JSON.parse(userData.skills) : ["JavaScript", "React"],
+                  is_active: true,
+                  auth_user_id: userId
+                });
+            }
           }
           break;
           
         case 'interviewee':
-          // Create entry in users table with auth_user_id
-          const { data: candidateUserData } = await supabase.from("users").insert({
-            full_name: userData.name,
-            work_email: userData.email,
-            password_hash: "managed_by_supabase",
-            roles: { role: "interviewee" },
-            is_verified: true,
-            auth_user_id: userId
-          }).select('user_id').single();
-          
-          // Create candidate in the candidates table with auth_user_id
-          if (candidateUserData) {
-            await supabase.from("candidates").insert({
-              user_id: candidateUserData.user_id,
-              name: userData.name,
-              email: userData.email,
-              source: 'client_upload',
-              auth_user_id: userId
-            });
+          // Create candidate in the candidates table with auth_user_id if it doesn't exist
+          if (userId_value) {
+            const { data: existingCandidate, error: getCandidateError } = await supabase
+              .from("candidates")
+              .select("candidate_id")
+              .eq("user_id", userId_value)
+              .maybeSingle();
+            
+            if (getCandidateError) {
+              console.error("Error checking existing candidate:", getCandidateError);
+            }
+            
+            if (!existingCandidate) {
+              await supabase
+                .from("candidates")
+                .insert({
+                  user_id: userId_value,
+                  name: userData.name,
+                  email: userData.email,
+                  source: 'client_upload',
+                  auth_user_id: userId
+                });
+            }
           }
           break;
           

@@ -10,26 +10,80 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardService } from '@/services/dashboardService';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const RequirementsPage: React.FC = () => {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
+  const fetchDashboardData = async () => {
+    try {
+      const data = await dashboardService.getAdminDashboardData();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const data = await dashboardService.getAdminDashboardData();
-        setDashboardData(data);
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchDashboardData();
+    
+    // Set up real-time subscription to get updates
+    const interviewsChannel = supabase
+      .channel('public:interviews')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'interviews' 
+        }, 
+        () => {
+          console.log('Interviews table changed, refreshing data');
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+      
+    const candidatesChannel = supabase
+      .channel('public:candidates')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'candidates' 
+        }, 
+        () => {
+          console.log('Candidates table changed, refreshing data');
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+      
+    const jobsChannel = supabase
+      .channel('public:jobs')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'jobs' 
+        }, 
+        () => {
+          console.log('Jobs table changed, refreshing data');
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+    
+    // Clean up subscriptions when component unmounts
+    return () => {
+      supabase.removeChannel(interviewsChannel);
+      supabase.removeChannel(candidatesChannel);
+      supabase.removeChannel(jobsChannel);
+    };
   }, []);
   
   if (isLoading) {
@@ -53,7 +107,7 @@ const RequirementsPage: React.FC = () => {
             <CardTitle className="text-sm font-medium text-gray-500">Total Interviews</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{dashboardData?.counts?.interviews || 0}</div>
+            <div className="text-3xl font-bold">{dashboardData?.totalInterviews || 0}</div>
           </CardContent>
         </Card>
         
@@ -80,7 +134,7 @@ const RequirementsPage: React.FC = () => {
             <CardTitle className="text-sm font-medium text-gray-500">Interviewees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{dashboardData?.counts?.interviewees || 0}</div>
+            <div className="text-3xl font-bold">{dashboardData?.totalCandidates || 0}</div>
           </CardContent>
         </Card>
       </div>
@@ -95,7 +149,7 @@ const RequirementsPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-blue-600">
-              {dashboardData?.counts?.upcomingInterviews || 0}
+              {dashboardData?.pendingInterviews || 0}
             </div>
           </CardContent>
         </Card>
@@ -109,7 +163,7 @@ const RequirementsPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-green-600">
-              {dashboardData?.counts?.completedInterviews || 0}
+              {dashboardData?.completedInterviews || 0}
             </div>
           </CardContent>
         </Card>
