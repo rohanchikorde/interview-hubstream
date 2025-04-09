@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { dashboardService, Organization } from '@/services/dashboardService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -308,7 +309,7 @@ const OrganizationDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Interview Performance</CardTitle>
-                <CardDescription>Average ratings over time</CardHeader>
+                <CardDescription>Average ratings over time</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-64">
