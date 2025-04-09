@@ -4,13 +4,13 @@ import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 /**
  * Helper function to query supabase tables with better error handling
- * Allows using any table name for flexibility while properly handling types
+ * Uses a type assertion to allow dynamic table names
  * @param tableName The name of the table to query
  * @returns A query builder for the specified table
  */
 export const supabaseTable = (tableName: string) => {
-  // Use a generic from() call to avoid TypeScript errors with dynamic table names
-  return supabase.from(tableName);
+  // Use a type assertion to handle dynamic table names
+  return supabase.from(tableName as any);
 };
 
 /**
@@ -49,4 +49,17 @@ export const handleMultipleResponse = <T>(response: { data: any; error: Postgres
   }
   
   return (response.data || []) as T[];
+};
+
+/**
+ * Helper function to cast database response to the expected type
+ * Useful for mapping from database schema to application types
+ * @param data The data from a Supabase query
+ * @returns The data cast to the expected type or null
+ */
+export const castResult = <T>(data: any): T | null => {
+  if (!data) {
+    return null;
+  }
+  return data as T;
 };

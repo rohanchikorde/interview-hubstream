@@ -1,7 +1,7 @@
 
 import { Json } from "@/integrations/supabase/types";
 
-export type InterviewStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Canceled';
+export type InterviewStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Canceled' | 'Rescheduled';
 
 export interface InterviewFeedback {
   rating: number;

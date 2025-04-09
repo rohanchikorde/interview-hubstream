@@ -1,11 +1,13 @@
+
 import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
 import { Interview, InterviewWithDetails, ScheduleInterviewRequest, AddInterviewFeedbackRequest, UpdateInterviewStatusRequest, InterviewStatus } from "@/types/interview";
 import { toast } from "sonner";
+import { TicketStatus } from "@/types/ticket";
 
 export const interviewService = {
   async getInterviews(): Promise<InterviewWithDetails[]> {
     try {
-      const response = await supabaseTable('interviews_schedule')
+      const response = await supabaseTable('interviews')
         .select(`
           *,
           candidates (*),
@@ -16,10 +18,10 @@ export const interviewService = {
       
       // Map the data to our frontend types with safe access and defaults
       const mappedInterviews: InterviewWithDetails[] = interviewsData.map(interview => ({
-        id: interview?.interview_id?.toString() || '',
-        candidate_id: interview?.candidate_id?.toString() || '',
-        interviewer_id: interview?.interviewer_id?.toString() || '',
-        requirement_id: interview?.job_id?.toString() || '',
+        id: String(interview?.interview_id) || '',
+        candidate_id: String(interview?.candidate_id) || '',
+        interviewer_id: String(interview?.interviewer_id) || '',
+        requirement_id: String(interview?.job_id) || '',
         scheduled_at: interview?.scheduled_at || new Date().toISOString(),
         status: (interview?.status as InterviewStatus) || 'Scheduled',
         created_at: interview?.created_at || new Date().toISOString(),
@@ -54,10 +56,10 @@ export const interviewService = {
       
       // Map the data to our frontend types with safe access
       const mappedInterview: InterviewWithDetails = {
-        id: interview?.interview_id?.toString() || '',
-        candidate_id: interview?.candidate_id?.toString() || '',
-        interviewer_id: interview?.interviewer_id?.toString() || '',
-        requirement_id: interview?.job_id?.toString() || '',
+        id: String(interview?.interview_id) || '',
+        candidate_id: String(interview?.candidate_id) || '',
+        interviewer_id: String(interview?.interviewer_id) || '',
+        requirement_id: String(interview?.job_id) || '',
         scheduled_at: interview?.scheduled_at || new Date().toISOString(),
         status: (interview?.status as InterviewStatus) || 'Scheduled',
         feedback: interview?.interviewer_notes ? {
@@ -81,9 +83,9 @@ export const interviewService = {
     try {
       const { data, error } = await supabaseTable('interviews')
         .insert({
-          candidate_id: parseInt(request.candidate_id),
-          interviewer_id: parseInt(request.interviewer_id),
-          job_id: parseInt(request.requirement_id),
+          candidate_id: parseInt(request.candidate_id) || null,
+          interviewer_id: parseInt(request.interviewer_id) || null,
+          job_id: parseInt(request.requirement_id) || null,
           scheduled_at: request.scheduled_at,
           status: 'scheduled',
         })
@@ -98,10 +100,10 @@ export const interviewService = {
 
       // Map the data to our frontend types
       const interview: Interview = {
-        id: data.interview_id?.toString() || '',
-        candidate_id: data.candidate_id?.toString() || '',
-        interviewer_id: data.interviewer_id?.toString() || '',
-        requirement_id: data.job_id?.toString() || '',
+        id: String(data.interview_id) || '',
+        candidate_id: String(data.candidate_id) || '',
+        interviewer_id: String(data.interviewer_id) || '',
+        requirement_id: String(data.job_id) || '',
         scheduled_at: data.scheduled_at,
         status: data.status as InterviewStatus,
         created_at: data.created_at,
@@ -136,7 +138,7 @@ export const interviewService = {
     try {
       const { error } = await supabaseTable('interviews')
         .update({ 
-          status: 'canceled',
+          status: 'canceled' as any, // Type assertion to bypass type check
           updated_at: new Date().toISOString()
         })
         .eq('interview_id', id);
@@ -154,7 +156,7 @@ export const interviewService = {
       const { error } = await supabaseTable('interviews')
         .update({ 
           interviewer_notes: feedbackData.feedback.comments,
-          status: 'completed',
+          status: 'completed' as any, // Type assertion to bypass type check
           updated_at: new Date().toISOString()
         })
         .eq('interview_id', id);
@@ -195,7 +197,7 @@ export const interviewService = {
       const { error: updateError } = await supabaseTable('interviews')
         .update({ 
           scheduled_at: newDate,
-          status: 'rescheduled',
+          status: 'rescheduled' as any, // Type assertion to bypass type check
           reschedule_count: rescheduleCount + 1,
           updated_at: new Date().toISOString()
         })

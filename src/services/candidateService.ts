@@ -1,5 +1,5 @@
 
-import { supabaseTable, castResult } from "@/utils/supabaseHelpers";
+import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Candidate, 
@@ -24,7 +24,24 @@ export const candidateService = {
         .single();
 
       if (error) throw error;
-      return castResult<Candidate>(data);
+      
+      if (!data) {
+        return null;
+      }
+      
+      // Map the database response to our application type
+      const candidate: Candidate = {
+        id: String(data.candidate_id) || '',
+        full_name: data.name || '',
+        email: data.email || '',
+        resume_url: data.resume_url,
+        status: 'New',
+        requirement_id: request.requirement_id,
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.created_at || new Date().toISOString()
+      };
+      
+      return candidate;
     } catch (error: any) {
       toast.error(`Failed to create candidate: ${error.message}`);
       return null;
@@ -48,7 +65,19 @@ export const candidateService = {
         return true; // In a real app, check if candidate is related to requirementId
       });
       
-      return castResult<Candidate[]>(filteredCandidates);
+      // Map the database response to our application type
+      const candidates: Candidate[] = filteredCandidates.map((item: any) => ({
+        id: String(item.candidate_id) || '',
+        full_name: item.name || '',
+        email: item.email || '',
+        resume_url: item.resume_url,
+        status: 'New',
+        requirement_id: requirementId,
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.created_at || new Date().toISOString()
+      }));
+      
+      return candidates;
     } catch (error: any) {
       toast.error(`Failed to fetch candidates: ${error.message}`);
       return [];
@@ -70,7 +99,23 @@ export const candidateService = {
         .single();
 
       if (error) throw error;
-      return castResult<Candidate>(data);
+      
+      if (!data) {
+        return null;
+      }
+      
+      // Map the database response to our application type
+      const candidate: Candidate = {
+        id: String(data.candidate_id) || '',
+        full_name: data.name || '',
+        email: data.email || '',
+        resume_url: data.resume_url,
+        status: status,
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString()
+      };
+      
+      return candidate;
     } catch (error: any) {
       toast.error(`Failed to update candidate status: ${error.message}`);
       return null;
