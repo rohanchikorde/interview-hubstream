@@ -1,11 +1,7 @@
 
 import { Json } from "@/integrations/supabase/types";
 
-// UI-facing interview status types (display friendly)
 export type InterviewStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Canceled' | 'Rescheduled';
-
-// Database interview status types (lowercase as used in Supabase)
-export type DatabaseInterviewStatus = 'scheduled' | 'completed' | 'rescheduled' | 'tech_issue' | 'no_show' | 'on_hold';
 
 export interface InterviewFeedback {
   rating: number;
@@ -21,7 +17,7 @@ export interface Interview {
   interviewer_id: string;
   requirement_id: string;
   scheduled_at: string;
-  status: InterviewStatus | DatabaseInterviewStatus;
+  status: InterviewStatus;
   feedback?: InterviewFeedback | null;
   created_at: string;
   updated_at: string;
@@ -41,7 +37,7 @@ export interface ScheduleInterviewRequest {
 }
 
 export interface UpdateInterviewStatusRequest {
-  status: InterviewStatus | DatabaseInterviewStatus;
+  status: InterviewStatus;
 }
 
 export interface AddInterviewFeedbackRequest {

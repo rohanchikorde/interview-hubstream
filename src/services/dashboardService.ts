@@ -14,16 +14,6 @@ export interface DashboardSummary {
   recentActivity: Activity[];
   interviewTrend: InterviewTrend[];
   statusDistribution: StatusDistribution[];
-  counts?: {
-    companies?: number;
-    interviewers?: number;
-    pendingRequests?: number;
-    interviews?: number;
-    upcomingInterviews?: number;
-    completedInterviews?: number;
-    canceledInterviews?: number;
-    scheduledMocks?: number;
-  };
 }
 
 export interface Activity {
@@ -88,7 +78,7 @@ export const dashboardService = {
       const { count: completedInterviews, error: completedError } = await supabase
         .from('interviews')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed');
+        .eq('status', 'Completed');
       
       if (completedError) throw completedError;
       
@@ -159,7 +149,7 @@ export const dashboardService = {
       const { count: completedInterviews, error: completedError } = await supabase
         .from('interviews')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed');
+        .eq('status', 'Completed');
       
       if (completedError) throw completedError;
       
@@ -175,7 +165,7 @@ export const dashboardService = {
       const { count: canceledInterviews, error: canceledError } = await supabase
         .from('interviews')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'no_show'); // Using 'no_show' as equivalent to canceled
+        .eq('status', 'Canceled');
       
       if (canceledError) throw canceledError;
       
@@ -192,20 +182,6 @@ export const dashboardService = {
         .select('*', { count: 'exact', head: true });
       
       if (candidatesError) throw candidatesError;
-      
-      // Get company count
-      const { count: companiesCount, error: companiesError } = await supabase
-        .from('companies')
-        .select('*', { count: 'exact', head: true });
-      
-      if (companiesError) throw companiesError;
-      
-      // Get interviewers count
-      const { count: interviewersCount, error: interviewersError } = await supabase
-        .from('interviewers')
-        .select('*', { count: 'exact', head: true });
-      
-      if (interviewersError) throw interviewersError;
       
       // Get recent activity (last 5 interviews)
       const { data: recentInterviews, error: recentError } = await supabase
@@ -256,16 +232,7 @@ export const dashboardService = {
         totalCandidates: totalCandidates || 0,
         recentActivity,
         interviewTrend,
-        statusDistribution,
-        counts: {
-          companies: companiesCount || 0,
-          interviewers: interviewersCount || 0,
-          pendingRequests: 0, // We can fetch this from a demo requests table later
-          interviews: totalInterviews || 0,
-          upcomingInterviews: pendingInterviews || 0,
-          completedInterviews: completedInterviews || 0,
-          canceledInterviews: canceledInterviews || 0,
-        }
+        statusDistribution
       };
     } catch (error) {
       console.error('Error fetching admin dashboard data:', error);
