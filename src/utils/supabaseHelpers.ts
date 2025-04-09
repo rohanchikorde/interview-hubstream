@@ -1,29 +1,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
-type DBTables = Database['public']['Tables'];
-type TableName = keyof DBTables;
-
 /**
- * Helper function to query supabase tables with type safety
- * Allows using any table name for flexibility, but be cautious
+ * Helper function to query supabase tables with better error handling
+ * Allows using any table name for flexibility while properly handling types
  * @param tableName The name of the table to query
  * @returns A query builder for the specified table
  */
 export const supabaseTable = (tableName: string) => {
-  // Cast to any to bypass TypeScript's strict table name checking
-  return supabase.from(tableName as any);
-};
-
-/**
- * Helper function to cast query results to a specific type
- * @param data The data to cast
- * @returns The data cast to the specified type
- */
-export const castResult = <T>(data: any): T => {
-  return data as T;
+  // Use a generic from() call to avoid TypeScript errors with dynamic table names
+  return supabase.from(tableName);
 };
 
 /**

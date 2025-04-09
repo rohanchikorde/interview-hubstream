@@ -15,17 +15,17 @@ export const ticketService = {
 
       const tickets = handleMultipleResponse<any>(response);
 
-      // Map the data to our frontend types
+      // Map the data to our frontend types with safe access
       const mappedTickets: TicketWithDetails[] = tickets.map(ticket => ({
-        id: ticket.ticket_id?.toString() || '',
-        status: ticket.status as TicketStatus,
-        raised_by: ticket.user_id?.toString() || '',
-        requirement_id: ticket.requirement_id?.toString() || '',
-        company_id: ticket.company_id?.toString() || '',
-        created_at: ticket.created_at || '',
-        updated_at: ticket.updated_at || ticket.created_at || '',
-        company_name: ticket.companies?.company_name || '',
-        requirement_title: ticket.subject || '',
+        id: ticket?.ticket_id?.toString() || '',
+        status: ticket?.status as TicketStatus || 'open',
+        raised_by: ticket?.user_id?.toString() || '',
+        requirement_id: ticket?.requirement_id?.toString() || '',
+        company_id: ticket?.company_id?.toString() || '',
+        created_at: ticket?.created_at || new Date().toISOString(),
+        updated_at: ticket?.updated_at || ticket?.created_at || new Date().toISOString(),
+        company_name: ticket?.companies?.company_name || '',
+        requirement_title: ticket?.subject || '',
       }));
       
       return mappedTickets;
@@ -51,17 +51,17 @@ export const ticketService = {
         return null;
       }
       
-      // Map the data to our frontend types
+      // Map the data to our frontend types with safe access
       const mappedTicket: TicketWithDetails = {
-        id: ticket.ticket_id?.toString() || '',
-        status: ticket.status as TicketStatus,
-        raised_by: ticket.user_id?.toString() || '',
-        requirement_id: ticket.requirement_id?.toString() || '',
-        company_id: ticket.company_id?.toString() || '',
-        created_at: ticket.created_at || '',
-        updated_at: ticket.updated_at || ticket.created_at || '',
-        company_name: ticket.companies?.company_name || '',
-        requirement_title: ticket.subject || '',
+        id: ticket?.ticket_id?.toString() || '',
+        status: ticket?.status as TicketStatus || 'open',
+        raised_by: ticket?.user_id?.toString() || '',
+        requirement_id: ticket?.requirement_id?.toString() || '',
+        company_id: ticket?.company_id?.toString() || '',
+        created_at: ticket?.created_at || new Date().toISOString(),
+        updated_at: ticket?.updated_at || ticket?.created_at || new Date().toISOString(),
+        company_name: ticket?.companies?.company_name || '',
+        requirement_title: ticket?.subject || '',
       };
       
       return mappedTicket;

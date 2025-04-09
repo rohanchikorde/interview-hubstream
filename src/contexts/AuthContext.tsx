@@ -1,17 +1,30 @@
+
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
+
+// Define a custom User type that extends SupabaseUser with the properties we need
+interface User extends SupabaseUser {
+  name?: string;
+  company?: string;
+  role?: string;
+}
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
+  isAuthenticated: boolean;
   signUp: (credentials: any) => Promise<void>;
   signIn: (credentials: any) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (redirect?: boolean) => Promise<void>;
   updateUser: (data: any) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: any) => Promise<void>;
+  logout: (redirect?: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,13 +33,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-      setUser(session?.user || null);
+      
+      if (session?.user) {
+        // Enhance user object with user metadata
+        const enhancedUser = {
+          ...session.user,
+          name: session.user.user_metadata?.full_name || '',
+          company: session.user.user_metadata?.company || '',
+          role: session.user.user_metadata?.role || ''
+        };
+        setUser(enhancedUser);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+      
       setIsLoading(false);
     };
 
@@ -34,15 +63,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       setSession(session);
-      setUser(session?.user || null);
+      
+      if (session?.user) {
+        // Enhance user object with user metadata
+        const enhancedUser = {
+          ...session.user,
+          name: session.user.user_metadata?.full_name || '',
+          company: session.user.user_metadata?.company || '',
+          role: session.user.user_metadata?.role || ''
+        };
+        setUser(enhancedUser);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     });
   }, []);
 
-  useEffect(() => {
-    supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user || null);
-    });
-  }, []);
+  // Register function
+  const register = async (userData: any) => {
+    return signUp(userData);
+  };
+
+  // Login function
+  const login = async (email: string, password: string) => {
+    return signIn({ email, password });
+  };
+
+  // Logout function
+  const logout = async (redirect: boolean = true) => {
+    return signOut(redirect);
+  };
 
   const signUp = async (credentials: any) => {
     setIsLoading(true);
@@ -55,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             full_name: credentials.name,
             phone_number: credentials.phone,
             role: credentials.role,
+            company: credentials.company
           },
         },
       });
@@ -97,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (redirect: boolean = true) => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
@@ -105,7 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(error.message);
       } else {
         toast.success('Signed out successfully!');
-        navigate('/auth/sign-in');
+        if (redirect) {
+          navigate('/auth/sign-in');
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -122,7 +177,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(error.message);
       } else {
         toast.success('Profile updated successfully!');
-        setUser((prevUser) => ({ ...prevUser, ...data.data }));
+        setUser((prevUser) => {
+          if (!prevUser) return null;
+          return { ...prevUser, ...data.data };
+        });
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -135,47 +193,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleRoleBasedData = async (userId: string, role: string, formData: any) => {
     try {
       if (role === "admin") {
-        // Use supabase.from directly to avoid type issues
+        // Use raw query for user_id as string to avoid type errors
         await supabase.from("users")
           .insert({
-            user_id: userId, 
-            role: "admin"
+            full_name: formData.name,
+            work_email: formData.email,
+            password_hash: "managed_by_supabase",
+            roles: { role: "admin" }
           });
-    } else if (role === "organization") {
-      await supabase.from("companies")
-        .insert({
-          company_id: parseInt(userId),
-          company_name: formData.company || "New Company"
-        });
-    } else if (role === "interviewer") {
-      await supabase.from("interviewers")
-        .insert({
-          user_id: parseInt(userId),
-          expertise: formData.skills || []
-        });
-    } else if (role === "interviewee") {
-      await supabase.from("candidates")
-        .insert({
-          user_id: parseInt(userId),
-          email: formData.email,
-          name: formData.name
-        });
+      } else if (role === "organization") {
+        await supabase.from("companies")
+          .insert({
+            company_name: formData.company || "New Company"
+          });
+      } else if (role === "interviewer") {
+        await supabase.from("interviewers")
+          .insert({
+            expertise: formData.skills || []
+          });
+      } else if (role === "interviewee") {
+        await supabase.from("candidates")
+          .insert({
+            email: formData.email,
+            name: formData.name
+          });
+      }
+      // Continue with any additional logic...
+    } catch (error) {
+      console.error("Error creating user role data:", error);
+      toast.error("Failed to set up user account");
     }
-    // Continue with any additional logic...
-  } catch (error) {
-    console.error("Error creating user role data:", error);
-    toast.error("Failed to set up user account");
-  }
-};
+  };
 
   const value: AuthContextType = {
     session,
     user,
     isLoading,
+    isAuthenticated,
     signUp,
     signIn,
     signOut,
     updateUser,
+    login,
+    register,
+    logout
   };
 
   return (

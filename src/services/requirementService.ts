@@ -10,7 +10,7 @@ export const requirementService = {
         .insert({
           title: requirementData.title,
           description: requirementData.description,
-          company_id: parseInt(requirementData.company_id),
+          company_id: parseInt(requirementData.company_id) || null,
           skills_required: requirementData.skills,
           positions_open: requirementData.number_of_positions,
           status: 'open',
@@ -24,19 +24,19 @@ export const requirementService = {
         return null;
       }
 
-      // Map the data to our frontend types
+      // Map the data to our frontend types with safe access
       const requirement: Requirement = {
-        id: data.job_id?.toString() || '',
-        title: data.title,
-        description: data.description,
-        number_of_positions: data.positions_open,
-        skills: data.skills_required || [],
+        id: data?.job_id?.toString() || '',
+        title: data?.title || '',
+        description: data?.description || '',
+        number_of_positions: data?.positions_open || 0,
+        skills: data?.skills_required || [],
         years_of_experience: requirementData.years_of_experience,
         price_per_interview: requirementData.price_per_interview,
-        status: data.status,
-        company_id: data.company_id?.toString() || '',
-        created_at: data.created_at,
-        updated_at: data.created_at,
+        status: data?.status || 'open',
+        company_id: data?.company_id?.toString() || '',
+        created_at: data?.created_at || new Date().toISOString(),
+        updated_at: data?.created_at || new Date().toISOString(),
       };
 
       return requirement;
@@ -59,20 +59,20 @@ export const requirementService = {
 
       const jobsData = handleMultipleResponse<any>(response);
       
-      // Map the data to our frontend types
+      // Map the data to our frontend types with safe access
       const requirements: Requirement[] = jobsData.map(job => ({
-        id: job.job_id?.toString() || '',
-        title: job.title || '',
-        description: job.description || '',
-        number_of_positions: job.positions_open || 0,
-        skills: job.skills_required || [],
-        years_of_experience: job.years_of_experience || 0,
-        price_per_interview: job.price_per_interview || 0,
-        status: job.status || 'open',
-        company_id: job.company_id?.toString() || '',
-        raised_by: job.raised_by || '',
-        created_at: job.created_at || '',
-        updated_at: job.updated_at || job.created_at || '',
+        id: job?.job_id?.toString() || '',
+        title: job?.title || '',
+        description: job?.description || '',
+        number_of_positions: job?.positions_open || 0,
+        skills: job?.skills_required || [],
+        years_of_experience: job?.years_of_experience || 0,
+        price_per_interview: job?.price_per_interview || 0,
+        status: job?.status || 'open',
+        company_id: job?.company_id?.toString() || '',
+        raised_by: job?.raised_by || '',
+        created_at: job?.created_at || new Date().toISOString(),
+        updated_at: job?.updated_at || job?.created_at || new Date().toISOString(),
       }));
       
       return requirements;
@@ -132,14 +132,14 @@ export const requirementService = {
       if (updates.price_per_interview) dbUpdates.price_per_interview = updates.price_per_interview;
       
       if (updates.company_id) {
-        dbUpdates.company_id = parseInt(updates.company_id);
+        dbUpdates.company_id = parseInt(updates.company_id) || null;
       }
       
       dbUpdates.updated_at = new Date().toISOString();
       
       const { error } = await supabaseTable('jobs')
         .update(dbUpdates)
-        .eq('job_id', parseInt(id));
+        .eq('job_id', parseInt(id) || 0);
 
       if (error) throw error;
       return true;
@@ -156,7 +156,7 @@ export const requirementService = {
           status: status.toLowerCase(), 
           updated_at: new Date().toISOString() 
         })
-        .eq('job_id', parseInt(id));
+        .eq('job_id', parseInt(id) || 0);
 
       if (error) throw error;
       return true;

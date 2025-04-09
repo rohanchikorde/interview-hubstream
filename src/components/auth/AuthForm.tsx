@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -47,7 +48,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register: registerUser } = useAuth();
+  const { login, register, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +74,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         // Redirection will be handled by AuthContext upon successful login
       } else {
         const registerData = data as RegisterFormValues;
-        await registerUser({
+        await register({
           name: registerData.name,
           email: registerData.email,
           password: registerData.password,

@@ -34,7 +34,7 @@ const Unauthorized = () => {
             </Link>
           </Button>
           
-          <Button variant="ghost" onClick={logout}>
+          <Button variant="ghost" onClick={() => logout()}>
             Sign Out
           </Button>
         </div>

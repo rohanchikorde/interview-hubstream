@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CreateRequirementRequest } from '@/types/requirement';
@@ -71,8 +70,7 @@ const RequirementForm: React.FC<RequirementFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      // For demo purposes, use the first organization
-      // In a real app, we would let the user select their organization
+      // Use the company from user metadata or a default value
       const companyId = user.company || '';
       
       // Transform the data with Zod to ensure skills is a string[]

@@ -1,39 +1,31 @@
-
 import { supabaseTable, handleSingleResponse, handleMultipleResponse } from "@/utils/supabaseHelpers";
 import { Interview, InterviewWithDetails, ScheduleInterviewRequest, AddInterviewFeedbackRequest, UpdateInterviewStatusRequest, InterviewStatus } from "@/types/interview";
 import { toast } from "sonner";
 
 export const interviewService = {
-  async getInterviews(filters?: { status?: InterviewStatus }): Promise<InterviewWithDetails[]> {
+  async getInterviews(): Promise<InterviewWithDetails[]> {
     try {
-      let query = supabaseTable('interviews_schedule')
+      const response = await supabaseTable('interviews_schedule')
         .select(`
           *,
           candidates (*),
           jobs (*)
         `);
       
-      // Apply filters if provided
-      if (filters?.status) {
-        query = query.eq('status', filters.status.toLowerCase());
-      }
+      const interviewsData = handleMultipleResponse<any>(response);
       
-      const response = await query.order('scheduled_at', { ascending: false });
-
-      const interviews = handleMultipleResponse<any>(response);
-      
-      // Map the data to our frontend types
-      const mappedInterviews: InterviewWithDetails[] = interviews.map(interview => ({
-        id: interview.interview_id?.toString() || '',
-        candidate_id: interview.candidate_id?.toString() || '',
-        interviewer_id: interview.interviewer_id?.toString() || '',
-        requirement_id: interview.job_id?.toString() || '',
-        scheduled_at: interview.scheduled_at,
-        status: interview.status as InterviewStatus,
-        created_at: interview.created_at,
-        updated_at: interview.created_at,
-        candidate_name: interview.candidates?.name || '',
-        requirement_title: interview.jobs?.title || '',
+      // Map the data to our frontend types with safe access and defaults
+      const mappedInterviews: InterviewWithDetails[] = interviewsData.map(interview => ({
+        id: interview?.interview_id?.toString() || '',
+        candidate_id: interview?.candidate_id?.toString() || '',
+        interviewer_id: interview?.interviewer_id?.toString() || '',
+        requirement_id: interview?.job_id?.toString() || '',
+        scheduled_at: interview?.scheduled_at || new Date().toISOString(),
+        status: (interview?.status as InterviewStatus) || 'Scheduled',
+        created_at: interview?.created_at || new Date().toISOString(),
+        updated_at: interview?.updated_at || interview?.created_at || new Date().toISOString(),
+        candidate_name: interview?.candidates?.name || '',
+        requirement_title: interview?.jobs?.title || '',
       }));
       
       return mappedInterviews;
@@ -60,22 +52,22 @@ export const interviewService = {
         return null;
       }
       
-      // Map the data to our frontend types
+      // Map the data to our frontend types with safe access
       const mappedInterview: InterviewWithDetails = {
-        id: interview.interview_id?.toString() || '',
-        candidate_id: interview.candidate_id?.toString() || '',
-        interviewer_id: interview.interviewer_id?.toString() || '',
-        requirement_id: interview.job_id?.toString() || '',
-        scheduled_at: interview.scheduled_at,
-        status: interview.status as InterviewStatus,
-        feedback: interview.interviewer_notes ? {
+        id: interview?.interview_id?.toString() || '',
+        candidate_id: interview?.candidate_id?.toString() || '',
+        interviewer_id: interview?.interviewer_id?.toString() || '',
+        requirement_id: interview?.job_id?.toString() || '',
+        scheduled_at: interview?.scheduled_at || new Date().toISOString(),
+        status: (interview?.status as InterviewStatus) || 'Scheduled',
+        feedback: interview?.interviewer_notes ? {
           rating: 0,
           comments: interview.interviewer_notes
         } : null,
-        created_at: interview.created_at,
-        updated_at: interview.updated_at || interview.created_at,
-        candidate_name: interview.candidates?.name || '',
-        requirement_title: interview.jobs?.title || '',
+        created_at: interview?.created_at || new Date().toISOString(),
+        updated_at: interview?.updated_at || interview?.created_at || new Date().toISOString(),
+        candidate_name: interview?.candidates?.name || '',
+        requirement_title: interview?.jobs?.title || '',
       };
       
       return mappedInterview;
@@ -144,7 +136,7 @@ export const interviewService = {
     try {
       const { error } = await supabaseTable('interviews')
         .update({ 
-          status: 'canceled', // Use lowercase to match DB enum
+          status: 'canceled',
           updated_at: new Date().toISOString()
         })
         .eq('interview_id', id);
@@ -173,7 +165,7 @@ export const interviewService = {
       // This is just a placeholder for now
       const { error: evalError } = await supabaseTable('interview_evaluations')
         .insert({
-          interview_id: parseInt(id),
+          interview_id: parseInt(id) || 0,
           score: feedbackData.feedback.rating,
           feedback: feedbackData.feedback.comments,
         });
@@ -192,13 +184,12 @@ export const interviewService = {
   async rescheduleInterview(id: string, newDate: string): Promise<boolean> {
     try {
       // First get the current reschedule count
-      const { data, error } = await supabaseTable('interviews')
+      const response = await supabaseTable('interviews')
         .select('reschedule_count')
         .eq('interview_id', id)
         .single();
-        
-      if (error) throw error;
       
+      const data = handleSingleResponse<{reschedule_count?: number}>(response);
       const rescheduleCount = data?.reschedule_count || 0;
       
       const { error: updateError } = await supabaseTable('interviews')
@@ -218,7 +209,7 @@ export const interviewService = {
     }
   },
 
-  // Add the missing method for interview feedback
+  // Add the feedback method that was missing
   async addInterviewFeedback(id: string, feedbackData: AddInterviewFeedbackRequest): Promise<boolean> {
     return this.addFeedback(id, feedbackData);
   }
