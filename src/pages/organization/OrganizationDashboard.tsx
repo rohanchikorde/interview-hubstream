@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { addDays, format } from 'date-fns';
+import { addDays } from 'date-fns';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   BarChart, 
   Bar, 
@@ -30,18 +31,25 @@ import {
   Calendar, 
   CheckCircle2, 
   Clock, 
-  DollarSign,
   PlusCircle,
   TrendingUp,
   Filter,
   Clock3,
-  Star
+  Star,
+  LogOut
 } from 'lucide-react';
-import { supabaseTable, handleMultipleResponse } from '@/utils/supabaseHelpers';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { organizationMockData } from '@/data/organizationMockData';
 import { DateRange } from 'react-day-picker';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from '@/integrations/supabase/client';
 
 const COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -74,6 +82,7 @@ const OrganizationDashboard: React.FC = () => {
   });
   const [filterCompany, setFilterCompany] = useState<string>("all");
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchOrganizationData();
@@ -83,17 +92,37 @@ const OrganizationDashboard: React.FC = () => {
     setLoading(true);
     try {
       // For now, we'll use the mock data while implementing Supabase integration
+      // TODO: Replace with actual data from Supabase
       const org = await dashboardService.getOrganization();
+      
+      // We would fetch company-specific data from Supabase based on the logged-in user
+      // Example:
+      // if (user && user.id) {
+      //   const { data: companyData } = await supabase
+      //     .from('companies')
+      //     .select('*')
+      //     .eq('user_id', user.id)
+      //     .single();
+      //
+      //   if (companyData) {
+      //     // Get company-specific interviews, candidates, etc.
+      //     const { data: interviewsData } = await supabase
+      //       .from('interviews')
+      //       .select('*')
+      //       .eq('company_id', companyData.company_id)
+      //       .gte('scheduled_at', dateRange.from.toISOString())
+      //       .lte('scheduled_at', dateRange.to ? dateRange.to.toISOString() : new Date().toISOString());
+      //
+      //     // Update org object with real data
+      //   }
+      // }
+      
       if (org) {
-        // In a real implementation, we would filter this data by date range and company
+        // Update the organization name if we have user data
+        if (user?.company) {
+          org.name = user.company;
+        }
         setOrganization(org);
-        
-        // In the future, we could use Supabase to fetch real-time data
-        // Example:
-        // const { data: interviewData } = await supabaseTable('interviews')
-        //   .select('*')
-        //   .gte('scheduled_at', dateRange.from.toISOString())
-        //   .lte('scheduled_at', dateRange.to.toISOString());
       }
     } catch (error) {
       console.error('Error fetching organization data:', error);
@@ -106,6 +135,17 @@ const OrganizationDashboard: React.FC = () => {
   const handleRefreshData = () => {
     toast.info('Refreshing dashboard data...');
     fetchOrganizationData();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Navigation to login page is handled by the AuthContext
+      toast.success('Logged out successfully!');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out');
+    }
   };
 
   if (loading) {
@@ -184,6 +224,28 @@ const OrganizationDashboard: React.FC = () => {
             <PlusCircle className="mr-2 h-4 w-4" />
             New Requirement
           </Button>
+          
+          {/* User menu with logout */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-2 px-3">
+                {user?.name || 'Account'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/organization/profile')}>
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/organization/settings')}>
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

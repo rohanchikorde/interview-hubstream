@@ -5,6 +5,7 @@ import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supaba
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { handleAuthOperation } from '@/utils/supabaseHelpers';
+import sessionService from '@/services/sessionService';
 
 // Define the allowed user roles
 export type UserRole = 'admin' | 'organization' | 'interviewer' | 'interviewee';
@@ -67,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getSession();
 
     // Set up auth state change subscription
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       setSession(session);
       
       if (session?.user) {
@@ -80,9 +81,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(enhancedUser);
         setIsAuthenticated(true);
+        
+        // If the user just signed in, redirect to their dashboard
+        if (event === 'SIGNED_IN') {
+          const role = session.user.user_metadata?.role as UserRole;
+          const dashboardPath = getDashboardRouteByRole(role);
+          navigate(dashboardPath);
+        }
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        
+        // If the user just signed out, redirect to login
+        if (event === 'SIGNED_OUT') {
+          navigate('/login');
+        }
       }
     });
 
@@ -90,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   // Get the user's role
   const getUserRole = (): UserRole | null => {
@@ -150,8 +163,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         toast.success('Account created successfully! Please check your email to verify.');
         
-        // Create user profile
-        await handleRoleBasedData(data.user?.id || '', credentials.role, credentials);
+        // Create user profile in the appropriate table based on role
+        if (data.user) {
+          await createUserProfileByRole(data.user.id, credentials);
+        }
         
         navigate('/login');
       }
@@ -196,6 +211,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         toast.error(error.message);
       } else {
+        // Clear any persistent state
+        sessionService.clearPersistentState();
+        
         toast.success('Signed out successfully!');
         if (redirect) {
           navigate('/login');
@@ -244,39 +262,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // In the registerUser function, replace the problematic table calls
-  const handleRoleBasedData = async (userId: string, role: string, formData: any) => {
+  // Create user profile based on role
+  const createUserProfileByRole = async (userId: string, userData: any) => {
     try {
-      if (role === "admin") {
-        // Use raw query for user_id as string to avoid type errors
-        await supabase.from("users")
-          .insert({
-            full_name: formData.name,
-            work_email: formData.email,
+      const role = userData.role as UserRole;
+      
+      switch (role) {
+        case 'admin':
+          // Create admin user in the users table
+          await supabase.from("users").insert({
+            user_id: userId,
+            full_name: userData.name,
+            work_email: userData.email,
             password_hash: "managed_by_supabase",
-            roles: { role: "admin" }
+            roles: { role: "admin" },
+            is_verified: true
           });
-      } else if (role === "organization") {
-        await supabase.from("companies")
-          .insert({
-            company_name: formData.company || "New Company"
+          break;
+          
+        case 'organization':
+          // Create organization in the companies table
+          await supabase.from("companies").insert({
+            company_id: userId, // Using userId as company_id for simplicity
+            company_name: userData.company || userData.name,
+            subscription_tier: 'basic'
           });
-      } else if (role === "interviewer") {
-        await supabase.from("interviewers")
-          .insert({
-            expertise: formData.skills || []
+          
+          // Also create entry in users table
+          await supabase.from("users").insert({
+            user_id: userId,
+            full_name: userData.name,
+            work_email: userData.email,
+            password_hash: "managed_by_supabase",
+            roles: { role: "organization" },
+            is_verified: true
           });
-      } else if (role === "interviewee") {
-        await supabase.from("candidates")
-          .insert({
-            email: formData.email,
-            name: formData.name
+          
+          // Create company_team entry to link user to company
+          await supabase.from("company_team").insert({
+            user_id: userId,
+            company_id: userId, // Same as above
+            role: 'client_admin'
           });
+          break;
+          
+        case 'interviewer':
+          // Create interviewer in the interviewers table
+          await supabase.from("interviewers").insert({
+            user_id: userId,
+            interviewer_id: userId, // Using userId as interviewer_id for simplicity
+            expertise: userData.skills ? JSON.parse(userData.skills) : [],
+            is_active: true
+          });
+          
+          // Also create entry in users table
+          await supabase.from("users").insert({
+            user_id: userId,
+            full_name: userData.name,
+            work_email: userData.email,
+            password_hash: "managed_by_supabase",
+            roles: { role: "interviewer" },
+            is_verified: true
+          });
+          break;
+          
+        case 'interviewee':
+          // Create candidate in the candidates table
+          await supabase.from("candidates").insert({
+            user_id: userId,
+            candidate_id: userId, // Using userId as candidate_id for simplicity
+            name: userData.name,
+            email: userData.email,
+            source: 'self_signup'
+          });
+          
+          // Also create entry in users table
+          await supabase.from("users").insert({
+            user_id: userId,
+            full_name: userData.name,
+            work_email: userData.email,
+            password_hash: "managed_by_supabase",
+            roles: { role: "interviewee" },
+            is_verified: true
+          });
+          break;
+          
+        default:
+          console.warn(`Unknown role: ${role}`);
       }
-      // Continue with any additional logic...
     } catch (error) {
-      console.error("Error creating user role data:", error);
-      toast.error("Failed to set up user account");
+      console.error("Error creating user profile:", error);
+      throw new Error("Failed to create user profile");
     }
   };
 

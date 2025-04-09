@@ -59,6 +59,76 @@ export const sessionService = {
     
     return (data.user.user_metadata?.role as UserRole) || null;
   },
+
+  /**
+   * Get user profile data from the appropriate table based on role
+   * @param userId The user's ID
+   * @param role The user's role
+   * @returns The user's profile data or null if not found
+   */
+  getUserProfileByRole: async (userId: string, role: UserRole): Promise<any | null> => {
+    try {
+      let data = null;
+      
+      switch (role) {
+        case 'admin':
+          // Fetch admin profile
+          const { data: adminData, error: adminError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+          
+          if (adminError) throw adminError;
+          data = adminData;
+          break;
+          
+        case 'organization':
+          // Fetch organization profile
+          const { data: orgData, error: orgError } = await supabase
+            .from('companies')
+            .select('*')
+            .eq('company_id', userId)
+            .single();
+          
+          if (orgError) throw orgError;
+          data = orgData;
+          break;
+          
+        case 'interviewer':
+          // Fetch interviewer profile
+          const { data: interviewerData, error: interviewerError } = await supabase
+            .from('interviewers')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+          
+          if (interviewerError) throw interviewerError;
+          data = interviewerData;
+          break;
+          
+        case 'interviewee':
+          // Fetch interviewee profile
+          const { data: intervieweeData, error: intervieweeError } = await supabase
+            .from('candidates')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+          
+          if (intervieweeError) throw intervieweeError;
+          data = intervieweeData;
+          break;
+          
+        default:
+          return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error(`Error fetching ${role} profile:`, error);
+      return null;
+    }
+  },
   
   /**
    * Set a persistent authentication state
