@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseTable } from '@/utils/supabaseHelpers';
 import { toast } from 'sonner';
 import { 
   Sidebar, 
@@ -29,16 +30,18 @@ import {
   LogOut
 } from 'lucide-react';
 
+interface Notification {
+  id: string;
+  message: string;
+  status: string;
+}
+
 interface OrganizationData {
   id: string;
   name: string;
   stats: any;
   user_id: string;
-  notifications?: {
-    id: string;
-    message: string;
-    status: string;
-  }[];
+  notifications?: Notification[];
   unreadNotificationsCount: number;
 }
 
@@ -54,8 +57,7 @@ const OrganizationDashboard: React.FC = () => {
       
       try {
         // Fetch organization data
-        const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
+        const { data: orgData, error: orgError } = await supabaseTable('organizations')
           .select('*')
           .eq('user_id', user.id)
           .single();
@@ -68,8 +70,7 @@ const OrganizationDashboard: React.FC = () => {
         }
         
         // Fetch notifications for this organization
-        const { data: notifData, error: notifError } = await supabase
-          .from('notifications')
+        const { data: notifData, error: notifError } = await supabaseTable('notifications')
           .select('*')
           .eq('user_id', user.id);
         
@@ -78,11 +79,13 @@ const OrganizationDashboard: React.FC = () => {
         }
         
         // Set the organization data with notifications
-        setOrganizationData({
-          ...orgData,
-          notifications: notifData || [],
-          unreadNotificationsCount: notifData ? notifData.filter(n => n.status === 'unread').length : 0
-        });
+        if (orgData) {
+          setOrganizationData({
+            ...orgData,
+            notifications: notifData || [],
+            unreadNotificationsCount: notifData ? notifData.filter(n => n.status === 'unread').length : 0
+          });
+        }
       } catch (error) {
         console.error('Error in fetchOrganizationData:', error);
         toast.error('An error occurred while loading data');
@@ -138,6 +141,7 @@ const OrganizationDashboard: React.FC = () => {
     );
   }
 
+  
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
       {/* Desktop Sidebar */}

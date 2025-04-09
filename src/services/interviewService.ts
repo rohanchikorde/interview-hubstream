@@ -42,7 +42,7 @@ export const interviewService = {
           interviewer_id: request.interviewer_id,
           requirement_id: request.requirement_id,
           scheduled_at: request.scheduled_at,
-          status: 'Scheduled' as InterviewStatus
+          status: 'scheduled' as InterviewStatus
         })
         .select()
         .single();
@@ -187,7 +187,7 @@ export const interviewService = {
       const { data, error } = await supabaseTable('interviews_schedule')
         .update({
           feedback: request.feedback as unknown as Json,
-          status: 'Completed' as InterviewStatus // Automatically update status to Completed when feedback is added
+          status: 'completed' as InterviewStatus // Automatically update status to Completed when feedback is added
         })
         .eq('id', interviewId)
         .select()

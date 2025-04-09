@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseTable } from '@/utils/supabaseHelpers';
 
 interface DashboardSummary {
   counts: {
@@ -11,7 +12,7 @@ interface DashboardSummary {
     upcomingInterviews: number;
     completedInterviews: number;
     canceledInterviews?: number;
-    scheduledMocks?: number; // Add this missing property for interviewee dashboard
+    scheduledMocks?: number; 
   };
   recentActivity?: any[];
 }
@@ -32,13 +33,13 @@ export const dashboardService = {
         { data: upcomingInterviews, error: upcomingError },
         { data: completedInterviews, error: completedError }
       ] = await Promise.all([
-        supabase.from('interviews').select('*', { count: 'exact', head: true }),
-        supabase.from('interviewers').select('*', { count: 'exact', head: true }),
-        supabase.from('interviewees').select('*', { count: 'exact', head: true }),
-        supabase.from('organizations').select('*', { count: 'exact', head: true }),
-        supabase.from('demo_requests').select('*').eq('status', 'pending'),
-        supabase.from('interviews').select('*').eq('status', 'scheduled').gt('date_time', new Date().toISOString()),
-        supabase.from('interviews').select('*').eq('status', 'completed')
+        supabaseTable('interviews').select('*', { count: 'exact', head: true }),
+        supabaseTable('interviewers').select('*', { count: 'exact', head: true }),
+        supabaseTable('interviewees').select('*', { count: 'exact', head: true }),
+        supabaseTable('organizations').select('*', { count: 'exact', head: true }),
+        supabaseTable('demo_requests').select('*').eq('status', 'pending'),
+        supabaseTable('interviews').select('*').eq('status', 'scheduled').gt('date_time', new Date().toISOString()),
+        supabaseTable('interviews').select('*').eq('status', 'completed')
       ]);
 
       if (interviewsError || interviewersError || intervieweesError || orgsError || pendingError || upcomingError || completedError) {
@@ -69,8 +70,7 @@ export const dashboardService = {
   async getOrganizationDashboardData(userId: string): Promise<DashboardSummary> {
     try {
       // First get the organization ID for this user
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
+      const { data: orgData, error: orgError } = await supabaseTable('organizations')
         .select('id')
         .eq('user_id', userId)
         .single();
@@ -79,7 +79,11 @@ export const dashboardService = {
         throw new Error('Failed to find organization data');
       }
 
-      const organizationId = orgData.id;
+      const organizationId = orgData?.id;
+
+      if (!organizationId) {
+        throw new Error('Organization ID is undefined');
+      }
 
       // Fetch data for this organization
       const [
@@ -87,13 +91,13 @@ export const dashboardService = {
         { data: upcomingInterviews, error: upcomingError },
         { data: completedInterviews, error: completedError }
       ] = await Promise.all([
-        supabase.from('interviews').select('*').eq('organization_id', organizationId),
-        supabase.from('interviews')
+        supabaseTable('interviews').select('*').eq('organization_id', organizationId),
+        supabaseTable('interviews')
           .select('*')
           .eq('organization_id', organizationId)
           .eq('status', 'scheduled')
           .gt('date_time', new Date().toISOString()),
-        supabase.from('interviews')
+        supabaseTable('interviews')
           .select('*')
           .eq('organization_id', organizationId)
           .eq('status', 'completed')
@@ -122,14 +126,17 @@ export const dashboardService = {
   async getInterviewerDashboardData(userId: string): Promise<DashboardSummary> {
     try {
       // First get the interviewer ID for this user
-      const { data: interviewerData, error: interviewerError } = await supabase
-        .from('interviewers')
+      const { data: interviewerData, error: interviewerError } = await supabaseTable('interviewers')
         .select('id')
         .eq('user_id', userId)
         .single();
 
       if (interviewerError) {
         throw new Error('Failed to find interviewer data');
+      }
+
+      if (!interviewerData) {
+        throw new Error('Interviewer data is null');
       }
 
       const interviewerId = interviewerData.id;
@@ -140,16 +147,16 @@ export const dashboardService = {
         { data: completedInterviews, error: completedError },
         { data: canceledInterviews, error: canceledError }
       ] = await Promise.all([
-        supabase.from('interviews')
+        supabaseTable('interviews')
           .select('*')
           .eq('interviewer_id', interviewerId)
           .eq('status', 'scheduled')
           .gt('date_time', new Date().toISOString()),
-        supabase.from('interviews')
+        supabaseTable('interviews')
           .select('*')
           .eq('interviewer_id', interviewerId)
           .eq('status', 'completed'),
-        supabase.from('interviews')
+        supabaseTable('interviews')
           .select('*')
           .eq('interviewer_id', interviewerId)
           .eq('status', 'cancelled') // Fixed: changed from 'canceled' to 'cancelled'
@@ -179,14 +186,17 @@ export const dashboardService = {
   async getIntervieweeDashboardData(userId: string): Promise<DashboardSummary> {
     try {
       // First get the interviewee ID for this user
-      const { data: intervieweeData, error: intervieweeError } = await supabase
-        .from('interviewees')
+      const { data: intervieweeData, error: intervieweeError } = await supabaseTable('interviewees')
         .select('id')
         .eq('user_id', userId)
         .single();
 
       if (intervieweeError) {
         throw new Error('Failed to find interviewee data');
+      }
+
+      if (!intervieweeData) {
+        throw new Error('Interviewee data is null');
       }
 
       const intervieweeId = intervieweeData.id;
@@ -197,16 +207,16 @@ export const dashboardService = {
         { data: completedInterviews, error: completedError },
         { data: mockInterviews, error: mockError }
       ] = await Promise.all([
-        supabase.from('interviews')
+        supabaseTable('interviews')
           .select('*')
           .eq('interviewee_id', intervieweeId)
           .eq('status', 'scheduled')
           .gt('date_time', new Date().toISOString()),
-        supabase.from('interviews')
+        supabaseTable('interviews')
           .select('*')
           .eq('interviewee_id', intervieweeId)
           .eq('status', 'completed'),
-        supabase.from('mock_interviews')
+        supabaseTable('mock_interviews')
           .select('*')
           .eq('interviewee_id', intervieweeId)
       ]);
@@ -220,7 +230,7 @@ export const dashboardService = {
           interviews: (upcomingInterviews?.length || 0) + (completedInterviews?.length || 0),
           upcomingInterviews: upcomingInterviews?.length || 0,
           completedInterviews: completedInterviews?.length || 0,
-          scheduledMocks: mockInterviews?.length || 0 // This property is now properly defined in the interface
+          scheduledMocks: mockInterviews?.length || 0
         }
       };
     } catch (error) {

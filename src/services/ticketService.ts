@@ -153,7 +153,7 @@ export const ticketService = {
     try {
       const { data, error } = await supabaseTable('tickets')
         .update({
-          status: 'Escalated',
+          status: 'Escalated'
           // In a real application, we would store the reason in a separate table
           // For simplicity, we're not implementing that here
         })

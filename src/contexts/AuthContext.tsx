@@ -4,7 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
+import { supabaseTable } from '@/utils/supabaseHelpers';
 
 // Define types for our context
 type Role = 'admin' | 'organization' | 'interviewer' | 'interviewee' | 'guest';
@@ -103,9 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Fetch user data from the users table
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, name, role')
+      const { data, error } = await supabaseTable('users')
+        .select('*')
         .eq('id', currentSession.user.id)
         .single();
 
@@ -113,17 +112,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error fetching user data:', error);
         setUser(null);
       } else if (data) {
+        // Get the user's role from the roles column (which is a JSONB type in the database)
+        const userRoles = data.roles as string[];
+        const primaryRole = userRoles && userRoles.length > 0 
+          ? userRoles[0] as Role 
+          : 'guest';
+
         // Set the authenticated user with role information
         setUser({
           id: data.id,
-          email: data.email,
-          name: data.name,
-          role: data.role as Role
-          // Remove the company property here since it's not in the users table
+          email: data.work_email,
+          name: data.full_name,
+          role: primaryRole
+          // company property would be added here if needed
         });
 
         // Redirect to the appropriate dashboard based on the role
-        redirectBasedOnRole(data.role as Role);
+        redirectBasedOnRole(primaryRole);
       }
     } catch (error) {
       console.error('Exception fetching user data:', error);
@@ -194,22 +199,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (authData.user) {
-        // Ensure the role is one of the valid enum values
+        // Ensure the role is valid
         const validRole = (userData.role === 'admin' || 
                            userData.role === 'organization' || 
                            userData.role === 'interviewer' || 
                            userData.role === 'interviewee') 
-                           ? userData.role as Database["public"]["Enums"]["user_role"] 
+                           ? userData.role as Role 
                            : 'organization';
 
         // Insert user data into the users table
-        const { error: userError } = await supabase
-          .from('users')
+        const { error: userError } = await supabaseTable('users')
           .insert({
             id: authData.user.id,
-            email: userData.email,
-            name: userData.name,
-            role: validRole,
+            work_email: userData.email,
+            full_name: userData.name,
+            roles: [validRole],
             password_hash: 'managed_by_auth' // We don't store the password hash, it's managed by Supabase Auth
           });
 
@@ -224,15 +228,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Create related record based on role
         if (validRole === 'admin') {
-          await supabase.from('admins').insert([{ user_id: authData.user.id }]);
+          await supabaseTable('admins')
+            .insert([{ user_id: authData.user.id }]);
         } else if (validRole === 'organization') {
-          await supabase.from('organizations').insert([
-            { user_id: authData.user.id, name: userData.company || 'Default Organization' }
-          ]);
+          await supabaseTable('organizations')
+            .insert([
+              { user_id: authData.user.id, name: userData.company || 'Default Organization' }
+            ]);
         } else if (validRole === 'interviewer') {
-          await supabase.from('interviewers').insert([{ user_id: authData.user.id }]);
+          await supabaseTable('interviewers')
+            .insert([{ user_id: authData.user.id }]);
         } else if (validRole === 'interviewee') {
-          await supabase.from('interviewees').insert([{ user_id: authData.user.id }]);
+          await supabaseTable('interviewees')
+            .insert([{ user_id: authData.user.id }]);
         }
 
         toast.success('Account created successfully! Please log in.');
