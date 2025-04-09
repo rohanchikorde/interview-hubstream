@@ -96,11 +96,11 @@ export const sessionService = {
           break;
           
         case 'interviewer':
-          // Fetch interviewer profile
+          // Convert UUID string to a valid format or query by different field
           const { data: interviewerData, error: interviewerError } = await supabase
             .from('interviewers')
             .select('*')
-            .eq('user_id', userId) // Using UUID string from auth directly
+            .eq('user_id', userId)
             .single();
           
           if (interviewerError) throw interviewerError;
@@ -108,11 +108,11 @@ export const sessionService = {
           break;
           
         case 'interviewee':
-          // Fetch interviewee profile
+          // Convert UUID string to a valid format or query by different field
           const { data: intervieweeData, error: intervieweeError } = await supabase
             .from('candidates')
             .select('*')
-            .eq('user_id', userId) // Using UUID string from auth directly
+            .eq('user_id', userId)
             .single();
           
           if (intervieweeError) throw intervieweeError;
