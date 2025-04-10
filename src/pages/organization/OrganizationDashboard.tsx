@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { dashboardService, Organization } from '@/services/dashboardService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +35,8 @@ import {
   Filter,
   Clock3,
   Star,
-  LogOut
+  LogOut,
+  RefreshCw
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -75,6 +75,7 @@ const OrganizationDashboard: React.FC = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState<string | null>(null);
   // Fixed the DateRange type to make 'to' optional, matching the DateRange type from react-day-picker
   const [dateRange, setDateRange] = useState<DateRange>({
     from: addDays(new Date(), -30),
@@ -86,36 +87,30 @@ const OrganizationDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchOrganizationData();
+    
+    // Set up real-time subscription to companies table
+    const companiesChannel = supabase
+      .channel('public:companies')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'companies' }, 
+        () => {
+          fetchOrganizationData();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(companiesChannel);
+    };
   }, [dateRange, filterCompany]);
 
   const fetchOrganizationData = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // For now, we'll use the mock data while implementing Supabase integration
-      // TODO: Replace with actual data from Supabase
+      // Fetch organization data from Supabase
       const org = await dashboardService.getOrganization();
-      
-      // We would fetch company-specific data from Supabase based on the logged-in user
-      // Example:
-      // if (user && user.id) {
-      //   const { data: companyData } = await supabase
-      //     .from('companies')
-      //     .select('*')
-      //     .eq('user_id', user.id)
-      //     .single();
-      //
-      //   if (companyData) {
-      //     // Get company-specific interviews, candidates, etc.
-      //     const { data: interviewsData } = await supabase
-      //       .from('interviews')
-      //       .select('*')
-      //       .eq('company_id', companyData.company_id)
-      //       .gte('scheduled_at', dateRange.from.toISOString())
-      //       .lte('scheduled_at', dateRange.to ? dateRange.to.toISOString() : new Date().toISOString());
-      //
-      //     // Update org object with real data
-      //   }
-      // }
       
       if (org) {
         // Update the organization name if we have user data
@@ -123,9 +118,12 @@ const OrganizationDashboard: React.FC = () => {
           org.name = user.company;
         }
         setOrganization(org);
+      } else {
+        setError("Couldn't retrieve organization data");
       }
     } catch (error) {
       console.error('Error fetching organization data:', error);
+      setError("Failed to load organization data");
       toast.error('Failed to load organization data');
     } finally {
       setLoading(false);
@@ -184,16 +182,20 @@ const OrganizationDashboard: React.FC = () => {
     );
   }
 
-  if (!organization) {
+  if (error || !organization) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-2">Organization Not Found</h2>
         <p className="mb-6 text-gray-600">We couldn't find your organization data.</p>
-        <Button onClick={fetchOrganizationData}>Retry</Button>
+        <Button onClick={fetchOrganizationData} className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Retry
+        </Button>
       </div>
     );
   }
 
+  
   // Enhanced monthly data with comparison to previous month
   const enhancedMonthlyData = organization.stats.monthlyData?.map((item, index, array) => {
     const prevMonth = index > 0 ? array[index-1].interviews : 0;
@@ -205,6 +207,7 @@ const OrganizationDashboard: React.FC = () => {
   });
 
   return (
+    
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold">{organization.name} Dashboard</h1>

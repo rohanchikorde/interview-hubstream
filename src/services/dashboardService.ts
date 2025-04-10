@@ -59,6 +59,7 @@ export const dashboardService = {
   async getOrganization(): Promise<Organization | null> {
     try {
       // Fetch real organization data from Supabase
+      // Update: Changed from 'organizations' to 'companies' to match the actual table name
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*')
@@ -78,7 +79,7 @@ export const dashboardService = {
       const { count: completedInterviews, error: completedError } = await supabase
         .from('interviews')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Completed');
+        .eq('status', 'completed');
       
       if (completedError) throw completedError;
       
