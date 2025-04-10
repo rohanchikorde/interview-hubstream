@@ -150,7 +150,7 @@ export const dashboardService = {
       const { count: completedInterviews, error: completedError } = await supabase
         .from('interviews')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Completed');
+        .eq('status', 'completed');
       
       if (completedError) throw completedError;
       
@@ -162,11 +162,11 @@ export const dashboardService = {
       
       if (pendingError) throw pendingError;
       
-      // Get canceled interviews count
+      // Get canceled interviews count - using 'no_show' as the equivalent of "Canceled"
       const { count: canceledInterviews, error: canceledError } = await supabase
         .from('interviews')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Canceled');
+        .eq('status', 'no_show');
       
       if (canceledError) throw canceledError;
       
