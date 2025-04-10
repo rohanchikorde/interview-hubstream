@@ -1,52 +1,97 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MessageSquare, HelpCircle, ExternalLink, FileQuestion } from 'lucide-react';
+import { Mail, Phone, HelpCircle, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const OrganizationSupport: React.FC = () => {
-  const handleContactSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Your message has been submitted to the admin team.");
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    subject: '',
+    message: '',
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleChatRequest = () => {
-    toast.info("Chat support is not available in this demo.");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // In a real implementation, this would send to Supabase
+      // For now, just show a toast notification
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
+      
+      toast.success('Support ticket submitted successfully!');
+      setFormData({ ...formData, subject: '', message: '' });
+    } catch (error) {
+      console.error('Error submitting support ticket:', error);
+      toast.error('Failed to submit support ticket');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Contact Support</h1>
-        <p className="text-muted-foreground">Get assistance with your organization's account</p>
+        <h1 className="text-2xl md:text-3xl font-bold">Contact Support</h1>
+        <p className="text-gray-500 mt-1">Get assistance with your organization's account</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Card className="bg-white dark:bg-gray-800 border-purple-100 dark:border-purple-900/20">
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-purple-600" />
+                <MessageSquare className="h-5 w-5" />
                 Contact Admin Team
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleContactSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label htmlFor="name" className="text-sm font-medium">
                       Your Name
                     </label>
-                    <Input id="name" placeholder="Enter your name" defaultValue="John Smith" readOnly />
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="email" className="text-sm font-medium">
                       Email Address
                     </label>
-                    <Input id="email" placeholder="Enter your email" defaultValue="john@acmecorp.com" readOnly />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
 
@@ -54,7 +99,14 @@ const OrganizationSupport: React.FC = () => {
                   <label htmlFor="subject" className="text-sm font-medium">
                     Subject
                   </label>
-                  <Input id="subject" placeholder="How can we help you?" />
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="How can we help you?"
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -63,139 +115,75 @@ const OrganizationSupport: React.FC = () => {
                   </label>
                   <Textarea
                     id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
                     placeholder="Please describe your issue or question in detail..."
                     rows={5}
+                    required
                   />
                 </div>
 
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-sm text-gray-600 dark:text-gray-300">
-                  <p className="flex items-start gap-2">
-                    <HelpCircle className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />
-                    <span>
-                      All requests are sent to your organization's admin team. For urgent issues, please use the phone support option.
-                    </span>
-                  </p>
-                </div>
-
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-                    Submit Request
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Sending...' : 'Send Message'}
                   </Button>
                 </div>
               </form>
             </CardContent>
           </Card>
-
-          <Card className="bg-white dark:bg-gray-800 border-purple-100 dark:border-purple-900/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileQuestion className="h-5 w-5 text-purple-600" />
-                Frequently Asked Questions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <h3 className="font-medium">How do I update my organization's information?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Please contact your admin who can update your organization details through the admin dashboard.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium">Who can schedule interviews?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Only admin users with scheduling permissions can create and manage interviews.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium">How can I add a new position?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Contact your admin team who can create new positions through the admin dashboard.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium">Can I export interview data?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Yes, you can export basic reports from the Analytics page. For custom reports, submit a request through this page.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium">How do I add a new interviewer?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Your admin team can add and manage interviewers through the admin dashboard.
-                </p>
-              </div>
-              
-              <Button variant="outline" className="w-full mt-4">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View Full Knowledge Base
-              </Button>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-white dark:bg-gray-800 border-purple-100 dark:border-purple-900/20">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Contact Information</CardTitle>
+              <CardTitle>Contact Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-purple-600 mt-0.5" />
-                <div>
-                  <h3 className="font-medium">Email Support</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    support@hirevantage.com
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Response time: 1-2 business days
-                  </p>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-full bg-purple-100 p-3">
+                  <Mail className="h-5 w-5 text-purple-600" />
                 </div>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <Phone className="h-5 w-5 text-purple-600 mt-0.5" />
                 <div>
-                  <h3 className="font-medium">Phone Support</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    +1 (555) 123-4567
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Monday-Friday, 9am-5pm EST
-                  </p>
+                  <p className="font-medium">Email Support</p>
+                  <p className="text-sm text-gray-500">support@hirevantage.com</p>
+                  <p className="text-xs text-gray-500">Response time: 1-2 business days</p>
                 </div>
               </div>
 
-              <Button 
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 mt-4"
-                onClick={handleChatRequest}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
+              <div className="flex items-center gap-4">
+                <div className="rounded-full bg-purple-100 p-3">
+                  <Phone className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Phone Support</p>
+                  <p className="text-sm text-gray-500">+1 (555) 123-4567</p>
+                  <p className="text-xs text-gray-500">Monday-Friday, 9am-5pm EST</p>
+                </div>
+              </div>
+
+              <Button className="w-full" variant="default">
+                <MessageSquare className="mr-2 h-4 w-4" />
                 Start Live Chat
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-white dark:bg-gray-800 rounded-full">
-                  <HelpCircle className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-purple-700 dark:text-purple-300">
-                    Need Admin Assistance?
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                    Your organization's admin can help with:
-                  </p>
-                  <ul className="text-sm text-gray-600 dark:text-gray-300 mt-2 space-y-1 list-disc list-inside">
-                    <li>User account management</li>
-                    <li>Interview scheduling</li>
-                    <li>Position updates</li>
-                    <li>Custom report generation</li>
-                  </ul>
-                </div>
+          <Card className="bg-purple-50 border-purple-100">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 mb-3">
+                <HelpCircle className="h-5 w-5 text-purple-600" />
+                <h3 className="font-medium text-purple-700">Need Admin Assistance?</h3>
               </div>
+              <p className="text-sm text-purple-600">
+                Your organization's admin can help with:
+              </p>
+              <ul className="text-sm text-purple-600 list-disc pl-5 mt-2">
+                <li>User permissions</li>
+                <li>Account settings</li>
+                <li>Team management</li>
+                <li>Billing questions</li>
+              </ul>
             </CardContent>
           </Card>
         </div>
