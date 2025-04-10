@@ -22,7 +22,8 @@ import {
   Bell,
   HelpCircle,
   LogOut,
-  Settings
+  Settings,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,11 @@ const OrganizationSidebar: React.FC<OrganizationSidebarProps> = ({ companyName =
       path: '/organization/interviewers', 
       name: 'Interviewers', 
       icon: <Users className="h-4 w-4" /> 
+    },
+    { 
+      path: '/organization/requirements', 
+      name: 'Requirements', 
+      icon: <FileText className="h-4 w-4" /> 
     },
     { 
       path: '/organization/analytics', 
