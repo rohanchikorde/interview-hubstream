@@ -1,18 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "./components/ui/theme-provider";
 import { useTheme } from "next-themes";
 import { useAuth } from './contexts/AuthContext';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import ProtectedRoute from './components/ProtectedRoute';
-import InterviewScheduler from './pages/InterviewScheduler';
-import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import InterviewManagement from './pages/InterviewManagement';
-import UserManagement from './pages/UserManagement';
-import SettingsPage from './pages/SettingsPage';
-import SupportPage from './pages/SupportPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import OrganizationDashboard from './pages/organization/OrganizationDashboard';
 import OrganizationInterviews from './pages/organization/OrganizationInterviews';
 import OrganizationInterviewers from './pages/organization/OrganizationInterviewers';
@@ -20,12 +15,12 @@ import OrganizationAnalytics from './pages/organization/OrganizationAnalytics';
 import OrganizationPositions from './pages/organization/OrganizationPositions';
 import OrganizationNotifications from './pages/organization/OrganizationNotifications';
 import OrganizationSupport from './pages/organization/OrganizationSupport';
-import RequirementDetailPage from './pages/RequirementDetailPage';
 import OrganizationRequirements from "./pages/organization/OrganizationRequirements";
+import RequirementDetailPage from './pages/requirements/RequirementDetailPage';
 
 function App() {
   const [mounted, setMounted] = useState(false);
-  const { currentUser } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -41,8 +36,10 @@ function App() {
     >
       <Routes>
         {/* Public Routes */}
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/signin" element={<Navigate to="/login" replace />} />
+        <Route path="/signup" element={<Navigate to="/register" replace />} />
 
         {/* Admin Routes */}
         <Route
@@ -52,15 +49,7 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           }
-        >
-          <Route index element={<Navigate to="/dashboard/analytics" replace />} />
-          <Route path="analytics" element={<AnalyticsDashboard />} />
-          <Route path="scheduler" element={<InterviewScheduler />} />
-          <Route path="management" element={<InterviewManagement />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="support" element={<SupportPage />} />
-        </Route>
+        />
         
         {/* Organization Routes */}
         <Route
@@ -83,7 +72,7 @@ function App() {
         </Route>
         
         {/* Default Route */}
-        <Route path="/" element={currentUser ? <Navigate to="/dashboard" replace /> : <Navigate to="/signin" replace />} />
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
       </Routes>
     </ThemeProvider>
   );

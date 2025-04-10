@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Card, 
@@ -80,7 +79,7 @@ const OrganizationInterviews: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const data = await dashboardService.getOrganizationDashboardData(user?.id || '');
+      const data = await dashboardService.getOrganizationDashboardData();
       setDashboardData(data);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
