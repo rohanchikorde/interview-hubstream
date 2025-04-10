@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -26,12 +27,27 @@ import { Search, Filter, Plus } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 
+// Updated to use lowercase keys that match the InterviewStatus type
 const statusColors: Record<InterviewStatus, string> = {
-  'Scheduled': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  'In Progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  'Canceled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  'Rescheduled': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+  'scheduled': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+  'completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  'rescheduled': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+  'tech_issue': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+  'no_show': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+  'on_hold': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+};
+
+// Helper function to display friendly status names
+const getDisplayStatus = (status: InterviewStatus): string => {
+  const statusMap: Record<InterviewStatus, string> = {
+    'scheduled': 'Scheduled',
+    'completed': 'Completed',
+    'rescheduled': 'Rescheduled',
+    'tech_issue': 'Technical Issue',
+    'no_show': 'No Show',
+    'on_hold': 'On Hold'
+  };
+  return statusMap[status];
 };
 
 const InterviewsList: React.FC = () => {
@@ -121,11 +137,12 @@ const InterviewsList: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Scheduled">Scheduled</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Canceled">Canceled</SelectItem>
-                <SelectItem value="Rescheduled">Rescheduled</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                <SelectItem value="tech_issue">Technical Issue</SelectItem>
+                <SelectItem value="no_show">No Show</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -163,7 +180,7 @@ const InterviewsList: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Badge className={statusColors[interview.status]}>
-                        {interview.status}
+                        {getDisplayStatus(interview.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
