@@ -58,15 +58,67 @@ export interface Organization {
 export const dashboardService = {
   async getOrganization(): Promise<Organization | null> {
     try {
-      // Fetch real organization data from Supabase
-      // Update: Changed from 'organizations' to 'companies' to match the actual table name
+      // Create a default organization object in case we can't find one in the database
+      let defaultOrg: Organization = {
+        id: "1",
+        name: "Default Organization",
+        stats: {
+          totalInterviews: 0,
+          completedInterviews: 0,
+          pendingInterviews: 0,
+          totalCandidates: 0,
+          totalRequirements: 0,
+          averageScore: 0,
+          monthlyData: [
+            { month: "Jan", interviews: 0 },
+            { month: "Feb", interviews: 0 },
+            { month: "Mar", interviews: 0 },
+            { month: "Apr", interviews: 0 },
+            { month: "May", interviews: 0 }
+          ],
+          statusDistribution: [
+            { name: "Completed", value: 0 },
+            { name: "Pending", value: 0 },
+            { name: "Canceled", value: 0 }
+          ]
+        }
+      };
+      
+      // Try to fetch company data, but don't use .single() which throws an error if no records
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*')
-        .limit(1)
-        .single();
+        .limit(1);
       
       if (companyError) throw companyError;
+      
+      // If no company data, create a default one in the database
+      if (!companyData || companyData.length === 0) {
+        // Create a new company record
+        const { data: newCompany, error: newCompanyError } = await supabase
+          .from('companies')
+          .insert([
+            { company_name: "Example Organization" }
+          ])
+          .select();
+        
+        if (newCompanyError) {
+          console.error("Error creating default company:", newCompanyError);
+          return defaultOrg;
+        }
+        
+        if (newCompany && newCompany.length > 0) {
+          return {
+            id: newCompany[0].company_id?.toString() || "1",
+            name: newCompany[0].company_name || "Example Organization",
+            stats: defaultOrg.stats
+          };
+        }
+        
+        return defaultOrg;
+      }
+      
+      const company = companyData[0];
       
       // Get interviews count for this organization
       const { count: totalInterviews, error: interviewsError } = await supabase
@@ -106,8 +158,8 @@ export const dashboardService = {
       if (requirementsError) throw requirementsError;
       
       return {
-        id: companyData?.company_id?.toString() || "1",
-        name: companyData?.company_name || "Example Organization",
+        id: company?.company_id?.toString() || "1",
+        name: company?.company_name || "Example Organization",
         stats: {
           totalInterviews: totalInterviews || 0,
           completedInterviews: completedInterviews || 0,

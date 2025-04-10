@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { dashboardService, Organization } from '@/services/dashboardService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,7 +77,6 @@ const OrganizationDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [error, setError] = useState<string | null>(null);
-  // Fixed the DateRange type to make 'to' optional, matching the DateRange type from react-day-picker
   const [dateRange, setDateRange] = useState<DateRange>({
     from: addDays(new Date(), -30),
     to: new Date(),
@@ -119,6 +119,7 @@ const OrganizationDashboard: React.FC = () => {
         }
         setOrganization(org);
       } else {
+        toast.error("Couldn't retrieve organization data");
         setError("Couldn't retrieve organization data");
       }
     } catch (error) {
