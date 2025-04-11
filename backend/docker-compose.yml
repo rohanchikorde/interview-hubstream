@@ -1,0 +1,18 @@
+
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+    restart: unless-stopped
+    command: gunicorn --workers 3 --bind 0.0.0.0:8000 app:app

@@ -76,6 +76,7 @@ import IntervieweeCoding from '@/pages/interviewee/IntervieweeCoding';
 import IntervieweeSupport from '@/pages/interviewee/IntervieweeSupport';
 import IntervieweeNotifications from '@/pages/interviewee/IntervieweeNotifications';
 import IntervieweeProfile from '@/pages/interviewee/IntervieweeProfile';
+import IntervieweeMockInterviews from '@/pages/interviewee/IntervieweeMockInterviews';
 
 import './App.css';
 import { Toaster as SonnerToaster } from 'sonner';
@@ -177,6 +178,7 @@ function App() {
             <Route path="/interviewee" element={<ProtectedRoute><IntervieweeDashboard /></ProtectedRoute>}>
               <Route index element={<IntervieweeOverview />} />
               <Route path="interviews" element={<IntervieweeInterviews />} />
+              <Route path="mock-interviews" element={<IntervieweeMockInterviews />} />
               <Route path="coding" element={<IntervieweeCoding />} />
               <Route path="support" element={<IntervieweeSupport />} />
               <Route path="notifications" element={<IntervieweeNotifications />} />
